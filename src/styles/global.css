@@ -447,3 +447,13 @@ details[open] summary {
   margin-right: 0.25rem;
 }
 
+/* Books page: links look like plain text until hovered */
+#books a.book-link {
+  color: inherit;
+  text-decoration: none;
+}
+#books a.book-link:hover,
+#books a.book-link:focus {
+  text-decoration: underline;
+}
+
