@@ -457,3 +457,37 @@ details[open] summary {
   text-decoration: underline;
 }
 
+/* Subsection labels for Books / Articles (each on its own line) */
+#books .subsection-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+  display: block;
+  margin: 0.25rem 0 0.25rem;
+}
+
+/* Paper links mirror book link behavior */
+#books a.paper-link {
+  color: inherit;
+  text-decoration: none;
+}
+#books a.paper-link:hover,
+#books a.paper-link:focus {
+  text-decoration: underline;
+}
+
+/* Books section: reduce vertical spacing on headings and lists */
+#books h2 {
+  margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+#books ul {
+  margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Books section: add spacing between each category subsection */
+#books > section {
+  margin: 1.5rem 0 1.5rem;
+}
+
