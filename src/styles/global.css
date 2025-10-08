@@ -442,3 +442,8 @@ details[open] summary {
     padding-bottom: 2rem;
 }
 
+/* Books page: add a touch of space between title and author */
+#books li em {
+  margin-right: 0.25rem;
+}
+
