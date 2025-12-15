@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "webbsite-refreshed",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -16,8 +16,10 @@
   },
   "devDependencies": {
     "@astrojs/language-server": "^2.15.4",
+    "@types/react": "^19.2.7",
     "astro": "^5.16.5",
     "prettier": "^3.7.4",
-    "prettier-plugin-astro": "^0.14.1"
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.3"
   }
 }
