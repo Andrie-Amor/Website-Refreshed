@@ -1,33 +1,123 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
+
 <BaseLayout title="Reading List">
   <section id="books" class="books">
-
     <section class="currently-reading">
       <h2>Currently Reading</h2>
       <ul>
-        <li><a class="book-link" href="https://www.oreilly.com/library/view/learning-modern-linux/9781098108939/" target="_blank"><em>Learning Modern Linux</em></a> by Michael Hausenblas</li>
-        <li><a class="book-link" href="https://dataintensive.net/" target="_blank"><em>Designing Data-Intensive Applications</em></a> by Martin Kleppmann</li>
-        <li><a class="book-link" href="https://www.amazon.com/Pragmatic-Programmer-journey-mastery-Anniversary/dp/0135957052" target="_blank"><em>The Pragmatic Programmer</em></a> by David Thomas and Andrew Hunt</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.oreilly.com/library/view/learning-modern-linux/9781098108939/"
+            target="_blank"><em>Learning Modern Linux</em></a
+          > by Michael Hausenblas
+        </li>
+        <li>
+          <a class="book-link" href="https://dataintensive.net/" target="_blank"
+            ><em>Designing Data-Intensive Applications</em></a
+          > by Martin Kleppmann
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/Pragmatic-Programmer-journey-mastery-Anniversary/dp/0135957052"
+            target="_blank"><em>The Pragmatic Programmer</em></a
+          > by David Thomas and Andrew Hunt
+        </li>
         <li hidden aria-hidden="true">
-          <section id="hidden-currently-reading" class="hidden-section" hidden aria-hidden="true">
+          <section
+            id="hidden-currently-reading"
+            class="hidden-section"
+            hidden
+            aria-hidden="true"
+          >
             <h2>CS Reading Backlog</h2>
             <ul>
-              <li><a class="book-link" href="https://www.amazon.com/Pragmatic-Programmer-journey-mastery-Anniversary/dp/0135957052" target="_blank"><em>Staff Engineer: Leadership Beyond the Management Track</em></a> by Will Larson and Tanya Reilly</li>
-              <li><a class="book-link" href="https://www.amazon.com/Programming-Rust-Fast-Systems-Development/dp/1492052590" target="_blank"><em>Programming Rust: Fast, Safe Systems Development</em></a> by Jim Blandy, Jason Orendorff, and Leonora F. S. Tindall</li>
-              <li><a class="book-link" href="https://www.brendangregg.com/systems-performance-2nd-edition-book.html" target="_blank"><em>Systems Performance: Enterprise and the Cloud</em></a> by Brendan Gregg</li>
-              <li><a class="book-link" href="https://ananyapam7.github.io/resources/C++/Scott_Meyers_Effective_Modern_C++.pdf" target="_blank"><em>Effective Modern C++</em></a> by Scott Meyers</li>
-              <li><a class="book-link" href="https://craftinginterpreters.com/" target="_blank"><em>Crafting Interpreters</em></a> by Robert Nystrom</li>
-              <li><a class="book-link" href="https://www.distributed-systems.net/index.php/books/ds4/" target="_blank"><em>Distributed Systems</em></a> by Maarten van Steen and Andrew S. Tanenbaum</li>
-              <li><a class="book-link" href="https://www.amazon.com/Learning-eBPF-Programming-Observability-Networking/dp/1098135121" target="_blank"><em>Learning eBPF: Programming the Linux Kernel for Enhanced Observability, Networking, and Security</em></a> by Liz Rice</li>
-              <li><a class="book-link" href="https://www.oreilly.com/library/view/the-linux-programming/9781593272203/" target="_blank"><em>The Linux Programming Interface</em></a> by Michael Kerrisk</li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.amazon.com/Pragmatic-Programmer-journey-mastery-Anniversary/dp/0135957052"
+                  target="_blank"
+                  ><em
+                    >Staff Engineer: Leadership Beyond the Management Track</em
+                  ></a
+                > by Will Larson and Tanya Reilly
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.amazon.com/Programming-Rust-Fast-Systems-Development/dp/1492052590"
+                  target="_blank"
+                  ><em>Programming Rust: Fast, Safe Systems Development</em></a
+                > by Jim Blandy, Jason Orendorff, and Leonora F. S. Tindall
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.brendangregg.com/systems-performance-2nd-edition-book.html"
+                  target="_blank"
+                  ><em>Systems Performance: Enterprise and the Cloud</em></a
+                > by Brendan Gregg
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://ananyapam7.github.io/resources/C++/Scott_Meyers_Effective_Modern_C++.pdf"
+                  target="_blank"><em>Effective Modern C++</em></a
+                > by Scott Meyers
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://craftinginterpreters.com/"
+                  target="_blank"><em>Crafting Interpreters</em></a
+                > by Robert Nystrom
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.distributed-systems.net/index.php/books/ds4/"
+                  target="_blank"><em>Distributed Systems</em></a
+                > by Maarten van Steen and Andrew S. Tanenbaum
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.amazon.com/Learning-eBPF-Programming-Observability-Networking/dp/1098135121"
+                  target="_blank"
+                  ><em
+                    >Learning eBPF: Programming the Linux Kernel for Enhanced
+                    Observability, Networking, and Security</em
+                  ></a
+                > by Liz Rice
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.oreilly.com/library/view/the-linux-programming/9781593272203/"
+                  target="_blank"><em>The Linux Programming Interface</em></a
+                > by Michael Kerrisk
+              </li>
             </ul>
             <h2>Math Reading Backlog</h2>
             <ul>
-              <li><a class="book-link" href="https://en.wikipedia.org/wiki/Principles_of_Mathematical_Analysis" target="_blank"><em>Principles of Mathematical Analysis</em></a> by Walter Rudin</li>
-              <li><a class="book-link" href="https://www.amazon.com/Book-Abstract-Algebra-Second-Mathematics/dp/0486474178" target="_blank"><em>A Book of Abstract Algebra</em></a> by Charles C Pinter</li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://en.wikipedia.org/wiki/Principles_of_Mathematical_Analysis"
+                  target="_blank"
+                  ><em>Principles of Mathematical Analysis</em></a
+                > by Walter Rudin
+              </li>
+              <li>
+                <a
+                  class="book-link"
+                  href="https://www.amazon.com/Book-Abstract-Algebra-Second-Mathematics/dp/0486474178"
+                  target="_blank"><em>A Book of Abstract Algebra</em></a
+                > by Charles C Pinter
+              </li>
             </ul>
           </section>
         </li>
@@ -38,16 +128,57 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <h2>Computer Science</h2>
       <p class="subsection-label">Books</p>
       <ul>
-        <li><a class="book-link" href="https://agorism.dev/book/c%2B%2B/%28C%2B%2B%20In-Depth%20Series%29%20Bjarne%20Stroustrup%20-%20A%20Tour%20of%20C%2B%2B-Addison-Wesley%20Professional%20%282018%29.pdf" target="_blank"><em>A Tour of C++</em></a> by Bjarne Stroustrup</li>
-        <li><a class="book-link" href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank"><em>Operating Systems: Three Easy Pieces</em></a> by Remzi Arpaci-Dusseau and Andrea Arpaci-Dusseau</li>
-        <li><a class="book-link" href="https://book.systemsapproach.org/" target="_blank"><em>Computer Networks: A Systems Approach</em></a> by Larry Peterson and Bruce Davie</li>
-        <li><a class="book-link" href="https://www.amazon.com/Pointers-C-Kenneth-Reek/dp/0673999866" target="_blank"><em>Pointers on C</em></a> by Kenneth A. Reek</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://agorism.dev/book/c%2B%2B/%28C%2B%2B%20In-Depth%20Series%29%20Bjarne%20Stroustrup%20-%20A%20Tour%20of%20C%2B%2B-Addison-Wesley%20Professional%20%282018%29.pdf"
+            target="_blank"><em>A Tour of C++</em></a
+          > by Bjarne Stroustrup
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://pages.cs.wisc.edu/~remzi/OSTEP/"
+            target="_blank"><em>Operating Systems: Three Easy Pieces</em></a
+          > by Remzi Arpaci-Dusseau and Andrea Arpaci-Dusseau
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://book.systemsapproach.org/"
+            target="_blank"><em>Computer Networks: A Systems Approach</em></a
+          > by Larry Peterson and Bruce Davie
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/Pointers-C-Kenneth-Reek/dp/0673999866"
+            target="_blank"><em>Pointers on C</em></a
+          > by Kenneth A. Reek
+        </li>
       </ul>
 
       <p class="subsection-label">Articles & Papers</p>
       <ul>
-        <li><a class="book-link" href="https://people.freebsd.org/~lstewart/articles/cpumemory.pdf" target="_blank"><em>What Every Programmer Should Know About Memory</em></a> by Ulrich Drepper</li>
-        <li><a class="paper-link" href="https://db.cs.cmu.edu/mmap-cidr2022/" target="_blank"><em>Are You Sure You Want to Use MMAP in Your Database Management System?</em></a> by Andrew Crotty, Viktor Leis, and Andy Pavlo</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://people.freebsd.org/~lstewart/articles/cpumemory.pdf"
+            target="_blank"
+            ><em>What Every Programmer Should Know About Memory</em></a
+          > by Ulrich Drepper
+        </li>
+        <li>
+          <a
+            class="paper-link"
+            href="https://db.cs.cmu.edu/mmap-cidr2022/"
+            target="_blank"
+            ><em
+              >Are You Sure You Want to Use MMAP in Your Database Management
+              System?</em
+            ></a
+          > by Andrew Crotty, Viktor Leis, and Andy Pavlo
+        </li>
       </ul>
     </section>
 
@@ -55,11 +186,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <h2>Math</h2>
       <p class="subsection-label">Books</p>
       <ul>
-        <li><a class="book-link" href="https://bookstore.ams.org/amstext-5" target="_blank"><em>Advanced Calculus</em></a> by P.M. Fitzpatrick</li>
-        <li><a class="book-link" href="https://math24.wordpress.com/wp-content/uploads/2016/03/partial-differential-equations-by-w-a-s.pdf" target="_blank"><em>Partial Differential Equations: An Introduction</em></a> by Walter A. Strauss</li>
-        <li><a class="book-link" href="https://www.math.umd.edu/~dlevy/resources/na.pdf" target="_blank"><em>Introduction to Numerical Analysis</em></a> by Doron Levy</li>
-        <li><a class="book-link" href="https://www.amazon.com/Real-Analysis-Long-Form-Mathematics-Textbook/dp/1077254547" target="_blank"><em>Real Analysis: A Long-Form Mathematics Textbook</em></a> by Jay Cummings</li>
-        <li><a class="book-link" href="https://www.amazon.com/Proofs-Long-Form-Mathematics-Textbook-Math/dp/B08T8JCVF1" target="_blank"><em>Proofs: A Long-Form Mathematics Textbook</em></a> by Jay Cummings</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://bookstore.ams.org/amstext-5"
+            target="_blank"><em>Advanced Calculus</em></a
+          > by P.M. Fitzpatrick
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://math24.wordpress.com/wp-content/uploads/2016/03/partial-differential-equations-by-w-a-s.pdf"
+            target="_blank"
+            ><em>Partial Differential Equations: An Introduction</em></a
+          > by Walter A. Strauss
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.math.umd.edu/~dlevy/resources/na.pdf"
+            target="_blank"><em>Introduction to Numerical Analysis</em></a
+          > by Doron Levy
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/Real-Analysis-Long-Form-Mathematics-Textbook/dp/1077254547"
+            target="_blank"
+            ><em>Real Analysis: A Long-Form Mathematics Textbook</em></a
+          > by Jay Cummings
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/Proofs-Long-Form-Mathematics-Textbook-Math/dp/B08T8JCVF1"
+            target="_blank"><em>Proofs: A Long-Form Mathematics Textbook</em></a
+          > by Jay Cummings
+        </li>
       </ul>
 
       <!-- <p class="subsection-label">Articles & Papers</p>
@@ -71,17 +234,46 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <h2>Other</h2>
       <p class="subsection-label">Personal Development</p>
       <ul>
-        <li><a class="book-link" href="https://jamesclear.com/atomic-habits" target="_blank"><em>Atomic Habits</em></a> by James Clear</li>
-        <li><a class="book-link" href="https://www.amazon.com/How-Win-Friends-Influence-People/dp/0671027034" target="_blank"><em>How to Win Friends and Influence People</em></a> by Dale Carnegie</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://jamesclear.com/atomic-habits"
+            target="_blank"><em>Atomic Habits</em></a
+          > by James Clear
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/How-Win-Friends-Influence-People/dp/0671027034"
+            target="_blank"><em>How to Win Friends and Influence People</em></a
+          > by Dale Carnegie
+        </li>
       </ul>
-      
+
       <p class="subsection-label">Peak Fiction</p>
       <ul>
-        <li><a class="book-link" href="https://www.goodreads.com/book/show/44767458-dune" target="_blank"><em>Dune</em></a> by Frank Herbert</li>
-        <li><a class="book-link" href="https://www.amazon.com/dp/B09M2R6QLF?tag=r0b5d-20" target="_blank"><em>Mother of Learning</em></a> by Domagoj Kurmaic</li>
-        <li><a class="book-link" href="https://www.amazon.fr/dp/B0753FP6SP?binding=kindle_edition&qid=1759907072&sr=8-1" target="_blank"><em>Cradle (Books 1-12)</em></a> by Will Wight</li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.goodreads.com/book/show/44767458-dune"
+            target="_blank"><em>Dune</em></a
+          > by Frank Herbert
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.com/dp/B09M2R6QLF?tag=r0b5d-20"
+            target="_blank"><em>Mother of Learning</em></a
+          > by Domagoj Kurmaic
+        </li>
+        <li>
+          <a
+            class="book-link"
+            href="https://www.amazon.fr/dp/B0753FP6SP?binding=kindle_edition&qid=1759907072&sr=8-1"
+            target="_blank"><em>Cradle (Books 1-12)</em></a
+          > by Will Wight
+        </li>
       </ul>
-      
     </section>
   </section>
 </BaseLayout>
