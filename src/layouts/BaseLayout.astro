@@ -1,29 +1,32 @@
 ---
-import '../styles/global.css';
-import 'katex/dist/katex.min.css';
+import "../styles/global.css";
+import "katex/dist/katex.min.css";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-      <meta charset="utf-8" />
-      <link rel="icon" type="image/svg+xml" href="/favicon.png" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <title>{Astro.props.title ?? 'My Site'}</title>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
-  <script is:inline>
-    document.addEventListener('DOMContentLoaded', () => {
-      const mathElements = document.getElementsByClassName('math');
-      for (let el of mathElements) {
-        katex.render(el.textContent, el, {
-          displayMode: el.classList.contains('display'),
-          throwOnError: false,
-        });
-      }
-    });
-  </script>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <title>{Astro.props.title ?? "My Site"}</title>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"
+    ></script>
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", () => {
+        const mathElements = document.getElementsByClassName("math");
+        for (let el of mathElements) {
+          katex.render(el.textContent, el, {
+            displayMode: el.classList.contains("display"),
+            throwOnError: false,
+          });
+        }
+      });
+    </script>
   </head>
   <body>
     <header class="navbar">
@@ -39,36 +42,36 @@ import 'katex/dist/katex.min.css';
     </header>
     <main class="container">
       <slot />
-  </main>
-  <script is:inline>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const list = document.querySelector('.subtopic-list ul');
-      if (!list) return;
-      for (const link of list.querySelectorAll('li > a.subtopic-link')) {
-        const href = link.getAttribute('href');
-        try {
-          const res = await fetch(`${href}/content.html`);
-          if (!res.ok) continue;
-          const html = await res.text();
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const headers = doc.querySelectorAll('h2[id]');
-          if (headers.length) {
-            const ul = document.createElement('ul');
-            ul.className = 'subtopic-sections';
-            headers.forEach(h2 => {
-              const li = document.createElement('li');
-              const a = document.createElement('a');
-              a.href = `${href}#${h2.id}`;
-              a.textContent = h2.textContent;
-              li.appendChild(a);
-              ul.appendChild(li);
-            });
-            link.parentElement.appendChild(ul);
-          }
-        } catch {}
-      }
-    });
-  </script>
+    </main>
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const list = document.querySelector(".subtopic-list ul");
+        if (!list) return;
+        for (const link of list.querySelectorAll("li > a.subtopic-link")) {
+          const href = link.getAttribute("href");
+          try {
+            const res = await fetch(`${href}/content.html`);
+            if (!res.ok) continue;
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const headers = doc.querySelectorAll("h2[id]");
+            if (headers.length) {
+              const ul = document.createElement("ul");
+              ul.className = "subtopic-sections";
+              headers.forEach((h2) => {
+                const li = document.createElement("li");
+                const a = document.createElement("a");
+                a.href = `${href}#${h2.id}`;
+                a.textContent = h2.textContent;
+                li.appendChild(a);
+                ul.appendChild(li);
+              });
+              link.parentElement.appendChild(ul);
+            }
+          } catch {}
+        }
+      });
+    </script>
   </body>
 </html>
