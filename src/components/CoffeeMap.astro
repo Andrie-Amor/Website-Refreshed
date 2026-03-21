@@ -32,18 +32,12 @@ const initialShop = shops[0];
     <div class="coffee-map-canvas" id={mapId} data-map-canvas></div>
 
     <button
-      class="coffee-sidebar-toggle"
+      class="coffee-sidebar-reopen"
       type="button"
-      aria-expanded="true"
       aria-controls="coffee-map-sidebar"
-      data-sidebar-toggle
-    >
-      <span class="coffee-sidebar-toggle__icon" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
-      </span>
-    </button>
+      aria-label="Open sidebar"
+      data-sidebar-reopen
+    ></button>
 
     <aside
       id="coffee-map-sidebar"
@@ -88,6 +82,16 @@ const initialShop = shops[0];
         <h3 data-coffee-title>{initialShop?.name}</h3>
         <p data-coffee-description>{initialShop?.description}</p>
       </article>
+
+      <div
+        class="coffee-sidebar-edge"
+        role="separator"
+        aria-controls="coffee-map-sidebar"
+        aria-label="Resize sidebar"
+        aria-orientation="vertical"
+        tabindex="0"
+        data-sidebar-resizer
+      ></div>
     </aside>
   </div>
 </section>
@@ -106,7 +110,8 @@ const initialShop = shops[0];
     const description = root.querySelector("[data-coffee-description]");
     const accent = root.querySelector("[data-coffee-accent]");
     const sidebar = root.querySelector("[data-sidebar]");
-    const sidebarToggle = root.querySelector("[data-sidebar-toggle]");
+    const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
+    const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
     const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
 
     if (
@@ -116,13 +121,19 @@ const initialShop = shops[0];
       description instanceof HTMLElement &&
       accent instanceof HTMLElement &&
       sidebar instanceof HTMLElement &&
-      sidebarToggle instanceof HTMLButtonElement &&
+      sidebarResizer instanceof HTMLElement &&
+      sidebarReopen instanceof HTMLButtonElement &&
       mapContainer.dataset.initialized !== "true"
     ) {
       mapContainer.dataset.initialized = "true";
 
       const primaryStyle =
         "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+      const DEFAULT_SIDEBAR_WIDTH = 352;
+      const MIN_SIDEBAR_WIDTH = 248;
+      const MAX_SIDEBAR_WIDTH = 448;
+      const HIDE_SIDEBAR_THRESHOLD = 180;
+      let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
 
       const map = new maplibregl.Map({
         container: mapContainer,
@@ -175,17 +186,52 @@ const initialShop = shops[0];
       const bounds = new maplibregl.LngLatBounds();
 
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
+      const isSidebarHidden = () => root.classList.contains("is-sidebar-hidden");
+      const getSidebarMaxWidth = () =>
+        Math.max(
+          MIN_SIDEBAR_WIDTH,
+          Math.min(MAX_SIDEBAR_WIDTH, window.innerWidth - 48),
+        );
+      const clampSidebarWidth = (width) =>
+        Math.min(getSidebarMaxWidth(), Math.max(MIN_SIDEBAR_WIDTH, width));
+      const syncSidebarWidth = () => {
+        const width = clampSidebarWidth(currentSidebarWidth);
+
+        currentSidebarWidth = width;
+        root.style.setProperty("--sidebar-width", `${width}px`);
+        sidebarResizer.setAttribute("aria-valuemin", String(MIN_SIDEBAR_WIDTH));
+        sidebarResizer.setAttribute("aria-valuemax", String(getSidebarMaxWidth()));
+        sidebarResizer.setAttribute("aria-valuenow", String(Math.round(width)));
+      };
+      const syncSidebarVisibility = () => {
+        const hidden = !isCompact() && isSidebarHidden();
+        sidebar.setAttribute("aria-hidden", String(hidden));
+        sidebarReopen.setAttribute("aria-hidden", String(!hidden));
+      };
+      const showSidebar = () => {
+        if (isCompact()) return;
+        root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
+        syncSidebarWidth();
+        syncSidebarVisibility();
+      };
+      const hideSidebar = () => {
+        if (isCompact()) return;
+        root.classList.remove("is-sidebar-collapsing");
+        root.classList.add("is-sidebar-hidden");
+        syncSidebarVisibility();
+      };
 
       const getPadding = () => {
-        const sidebarOpen = !root.classList.contains("is-sidebar-collapsed");
-
-        if (isCompact()) {
+        if (isCompact() || isSidebarHidden()) {
           return { top: 28, right: 28, bottom: 28, left: 28 };
         }
 
-        return sidebarOpen
-          ? { top: 56, right: 56, bottom: 56, left: 392 }
-          : { top: 56, right: 56, bottom: 56, left: 92 };
+        return {
+          top: 56,
+          right: 56,
+          bottom: 56,
+          left: currentSidebarWidth + 40,
+        };
       };
 
       const fitToMarkers = (duration) => {
@@ -389,7 +435,13 @@ const initialShop = shops[0];
         }
       };
 
-      const setActiveShop = (shop) => {
+      const setActiveShop = (shop, options = {}) => {
+        const { revealSidebar = false } = options;
+
+        if (revealSidebar) {
+          showSidebar();
+        }
+
         title.textContent = shop.name;
         description.textContent = shop.description ?? "";
         accent.style.backgroundColor = shop.accent;
@@ -404,6 +456,9 @@ const initialShop = shops[0];
           item.classList.toggle("is-active", isActive);
           if (isActive) {
             item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            if (revealSidebar && !isCompact()) {
+              requestAnimationFrame(() => item.focus({ preventScroll: true }));
+            }
           }
         }
       };
@@ -424,7 +479,9 @@ const initialShop = shops[0];
             </span>
           `;
 
-          markerElement.addEventListener("click", () => setActiveShop(shop));
+          markerElement.addEventListener("click", () =>
+            setActiveShop(shop, { revealSidebar: true }),
+          );
 
           new maplibregl.Marker({
             element: markerElement,
@@ -440,17 +497,91 @@ const initialShop = shops[0];
       for (const item of listItems) {
         item.addEventListener("click", () => {
           const shop = shops.find((entry) => entry.id === item.dataset.shopId);
-          if (shop) setActiveShop(shop);
+          if (shop) setActiveShop(shop, { revealSidebar: true });
         });
       }
 
-      sidebarToggle.addEventListener("click", () => {
-        const collapsed = root.classList.toggle("is-sidebar-collapsed");
-        sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
-        window.setTimeout(() => {
-          map.resize();
-          fitToMarkers(350);
-        }, 260);
+      syncSidebarWidth();
+      syncSidebarVisibility();
+
+      let activePointerId = null;
+      let dragStartX = 0;
+      let dragStartWidth = currentSidebarWidth;
+      let dragCurrentWidth = currentSidebarWidth;
+
+      const resizeSidebar = (nextWidth) => {
+        currentSidebarWidth = clampSidebarWidth(nextWidth);
+        syncSidebarWidth();
+      };
+
+      const stopResizingSidebar = () => {
+        if (activePointerId === null) return;
+
+        if (dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD) {
+          hideSidebar();
+        } else {
+          root.classList.remove("is-sidebar-collapsing");
+        }
+
+        root.classList.remove("is-resizing-sidebar");
+        sidebarResizer.releasePointerCapture(activePointerId);
+        activePointerId = null;
+      };
+
+      sidebarResizer.addEventListener("pointerdown", (event) => {
+        if (isCompact() || isSidebarHidden() || event.button !== 0) return;
+
+        activePointerId = event.pointerId;
+        dragStartX = event.clientX;
+        dragStartWidth = currentSidebarWidth;
+        dragCurrentWidth = currentSidebarWidth;
+        root.classList.add("is-resizing-sidebar");
+        sidebarResizer.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      sidebarResizer.addEventListener("pointermove", (event) => {
+        if (activePointerId !== event.pointerId) return;
+
+        dragCurrentWidth = dragStartWidth + (event.clientX - dragStartX);
+        root.classList.toggle(
+          "is-sidebar-collapsing",
+          dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD,
+        );
+
+        if (dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD) {
+          resizeSidebar(MIN_SIDEBAR_WIDTH);
+          return;
+        }
+
+        resizeSidebar(dragCurrentWidth);
+      });
+
+      sidebarResizer.addEventListener("pointerup", stopResizingSidebar);
+      sidebarResizer.addEventListener("pointercancel", stopResizingSidebar);
+
+      sidebarResizer.addEventListener("keydown", (event) => {
+        if (isCompact()) return;
+
+        if (event.key === "ArrowLeft") {
+          if (currentSidebarWidth - 24 <= HIDE_SIDEBAR_THRESHOLD) {
+            hideSidebar();
+          } else {
+            resizeSidebar(currentSidebarWidth - 24);
+          }
+          event.preventDefault();
+        }
+
+        if (event.key === "ArrowRight") {
+          showSidebar();
+          resizeSidebar(currentSidebarWidth + 24);
+          event.preventDefault();
+        }
+      });
+
+      sidebarReopen.addEventListener("click", () => {
+        showSidebar();
+        map.resize();
       });
 
       const resizeObserver = new ResizeObserver(() => {
@@ -458,7 +589,14 @@ const initialShop = shops[0];
       });
 
       resizeObserver.observe(mapContainer);
-      window.addEventListener("resize", () => fitToMarkers(0));
+      window.addEventListener("resize", () => {
+        if (isCompact()) {
+          root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
+        }
+        syncSidebarWidth();
+        syncSidebarVisibility();
+        map.resize();
+      });
       window.addEventListener("pagehide", () => {
         resizeObserver.disconnect();
         map.remove();
@@ -481,6 +619,7 @@ const initialShop = shops[0];
 
 <style is:global>
   .coffee-map-section {
+    --sidebar-width: 22rem;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -510,64 +649,120 @@ const initialShop = shops[0];
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    width: min(22rem, 100vw - 3rem);
+    width: min(var(--sidebar-width), calc(100vw - 3rem));
     padding: 1rem;
     background: rgba(249, 249, 249, 0.94);
     border-right: 1px solid rgba(229, 229, 229, 0.96);
     box-shadow: 12px 0 32px rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(18px);
     transform: translateX(0);
+    opacity: 1;
     transition:
-      transform 260ms ease,
-      opacity 220ms ease;
+      transform 220ms ease,
+      opacity 180ms ease;
   }
 
-  .coffee-map-section.is-sidebar-collapsed .coffee-map-sidebar {
-    transform: translateX(calc(-100% - 1rem));
+  .coffee-map-section.is-sidebar-hidden .coffee-map-sidebar {
+    transform: translateX(calc(-100% - 1.5rem));
     opacity: 0;
     pointer-events: none;
   }
 
-  .coffee-sidebar-toggle {
+  .coffee-map-section.is-sidebar-collapsing .coffee-map-sidebar {
+    opacity: 0.82;
+  }
+
+  .coffee-sidebar-reopen {
     position: absolute;
     top: 1rem;
     left: 1rem;
     z-index: 5;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.72rem 0.95rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
     border: 1px solid rgba(229, 229, 229, 0.96);
-    border-radius: 1rem;
+    border-radius: 999px;
     background: rgba(249, 249, 249, 0.96);
-    color: #333;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(14px);
     cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9);
     transition:
+      opacity 180ms ease,
       transform 180ms ease,
-      left 260ms ease;
+      background-color 180ms ease;
   }
 
-  .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
-    left: calc(min(22rem, 100vw - 3rem) + 1rem);
-  }
-
-  .coffee-sidebar-toggle:hover {
-    transform: translateY(-1px);
-  }
-
-  .coffee-sidebar-toggle__icon {
-    display: inline-grid;
-    gap: 0.18rem;
-  }
-
-  .coffee-sidebar-toggle__icon span {
-    display: block;
-    width: 1rem;
-    height: 2px;
+  .coffee-sidebar-reopen::before,
+  .coffee-sidebar-reopen::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
     border-radius: 999px;
     background: #666;
+    transform: translate(-50%, -50%);
+  }
+
+  .coffee-sidebar-reopen::before {
+    width: 0.9rem;
+    height: 2px;
+  }
+
+  .coffee-sidebar-reopen::after {
+    width: 2px;
+    height: 0.9rem;
+  }
+
+  .coffee-map-section.is-sidebar-hidden .coffee-sidebar-reopen {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+
+  .coffee-sidebar-reopen:hover,
+  .coffee-sidebar-reopen:focus-visible {
+    background: rgba(255, 255, 255, 0.99);
+  }
+
+  .coffee-sidebar-reopen:focus-visible {
+    outline: none;
+  }
+
+  .coffee-sidebar-edge {
+    position: absolute;
+    top: 0;
+    right: -0.375rem;
+    bottom: 0;
+    z-index: 5;
+    width: 0.75rem;
+    padding: 0;
+    cursor: ew-resize;
+    touch-action: none;
+    background: transparent;
+  }
+
+  .coffee-sidebar-edge::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0.375rem;
+    bottom: 0;
+    width: 1px;
+    background: rgba(229, 229, 229, 0.96);
+    transition: background-color 180ms ease;
+  }
+
+  .coffee-sidebar-edge:hover::before,
+  .coffee-sidebar-edge:focus-visible::before,
+  .coffee-map-section.is-resizing-sidebar .coffee-sidebar-edge::before {
+    background: rgba(176, 176, 176, 0.96);
+  }
+
+  .coffee-sidebar-edge:focus-visible {
+    outline: none;
   }
 
   .coffee-map-sidebar__header {
@@ -805,8 +1000,12 @@ const initialShop = shops[0];
       padding: 0.85rem;
     }
 
-    .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
-      left: calc(min(20rem, calc(100vw - 1.5rem)) + 0.5rem);
+    .coffee-sidebar-edge {
+      display: none;
+    }
+
+    .coffee-sidebar-reopen {
+      display: none;
     }
 
     .coffee-map-section .maplibregl-ctrl-bottom-right,
@@ -820,15 +1019,6 @@ const initialShop = shops[0];
       width: calc(100vw - 1rem);
     }
 
-    .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
-      left: auto;
-      right: 1rem;
-    }
-
-    .coffee-map-section.is-sidebar-collapsed .coffee-sidebar-toggle {
-      left: 1rem;
-      right: auto;
-    }
     .coffee-marker {
       width: 3rem;
       height: 3rem;
