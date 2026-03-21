@@ -174,6 +174,7 @@ const initialShop = shops[0];
       const PINCH_THRESHOLD = 80;
       let pinchDelta = 0;
       let pinchResetTimer = null;
+      let pinchGestureConsumed = false;
       let queuedZoomSteps = 0;
       let queuedZoomPoint = null;
       let isQueuedZoomActive = false;
@@ -225,9 +226,10 @@ const initialShop = shops[0];
 
         pinchDelta = nextDelta;
 
-        if (steps !== 0) {
+        if (steps !== 0 && !pinchGestureConsumed) {
           pinchDelta -= steps * PINCH_THRESHOLD;
-          queuedZoomSteps += steps;
+          pinchGestureConsumed = true;
+          queuedZoomSteps = Math.sign(steps);
           queuedZoomPoint = containerPoint;
           processQueuedZoom();
         }
@@ -235,6 +237,7 @@ const initialShop = shops[0];
         window.clearTimeout(pinchResetTimer ?? undefined);
         pinchResetTimer = window.setTimeout(() => {
           pinchDelta = 0;
+          pinchGestureConsumed = false;
           pinchResetTimer = null;
         }, 140);
       };
