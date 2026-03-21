@@ -1,5 +1,5 @@
 ---
-import "maplibre-gl/dist/maplibre-gl.css";
+import "leaflet/dist/leaflet.css";
 import type { CoffeeShop } from "../data/coffeeShops";
 
 interface Props {
@@ -97,7 +97,7 @@ const initialShop = shops[0];
 </section>
 
 <script>
-  import maplibregl from "maplibre-gl";
+  import L from "leaflet";
 
   const root = document.querySelector('[data-map-root="favorite-coffee-map"]');
 
@@ -127,36 +127,86 @@ const initialShop = shops[0];
     ) {
       mapContainer.dataset.initialized = "true";
 
-      const primaryStyle =
-        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+      const tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
       const DEFAULT_SIDEBAR_WIDTH = 352;
       const MIN_SIDEBAR_WIDTH = 248;
       const MAX_SIDEBAR_WIDTH = 448;
       const HIDE_SIDEBAR_THRESHOLD = 180;
       let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
 
-      const map = new maplibregl.Map({
-        container: mapContainer,
-        style: primaryStyle,
-        center,
-        zoom: 11.2,
+      const map = L.map(mapContainer, {
+        center: [center[1], center[0]],
+        zoom: 11,
+        zoomControl: false,
         attributionControl: false,
-        dragRotate: false,
-        pitchWithRotate: false,
-        cooperativeGestures: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        keyboard: false,
+        zoomSnap: 1,
+        zoomDelta: 1,
+        minZoom: 9,
+        zoomAnimation: true,
+        zoomAnimationThreshold: 1,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
       });
 
-      map.touchZoomRotate.disableRotation();
-      map.scrollZoom.disable();
-      map.keyboard.disable();
-      map.doubleClickZoom.disable();
-      map.addControl(
-        new maplibregl.AttributionControl({ compact: true }),
-        "bottom-left",
-      );
+      L.control
+        .attribution({
+          position: "bottomleft",
+          prefix: false,
+        })
+        .addTo(map);
+      L.tileLayer(tileUrl, {
+        subdomains: "abcd",
+        maxZoom: 20,
+        detectRetina: true,
+        keepBuffer: 8,
+        updateWhenZooming: true,
+        updateInterval: 120,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }).addTo(map);
 
       const clampZoom = (zoom) =>
         Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
+      const PINCH_ZOOM_STEP = 1;
+      const PINCH_THRESHOLD = 80;
+      let pinchDelta = 0;
+      let pinchResetTimer = null;
+      let queuedZoomSteps = 0;
+      let queuedZoomPoint = null;
+      let isQueuedZoomActive = false;
+
+      const processQueuedZoom = () => {
+        if (isQueuedZoomActive || queuedZoomSteps === 0) return;
+
+        const direction = Math.sign(queuedZoomSteps);
+        const nextZoom = clampZoom(map.getZoom() + direction * PINCH_ZOOM_STEP);
+
+        queuedZoomSteps -= direction;
+
+        if (nextZoom === map.getZoom()) {
+          queuedZoomSteps = 0;
+          return;
+        }
+
+        isQueuedZoomActive = true;
+        map.setZoomAround(
+          queuedZoomPoint ?? map.getSize().divideBy(2),
+          nextZoom,
+        );
+      };
+
+      map.on("zoomend", () => {
+        if (!isQueuedZoomActive) return;
+
+        isQueuedZoomActive = false;
+
+        if (queuedZoomSteps !== 0) {
+          processQueuedZoom();
+        }
+      });
 
       const handleTrackpadPinchZoom = (event) => {
         // Trackpad pinch gestures surface as ctrl+wheel on desktop browsers.
@@ -165,17 +215,28 @@ const initialShop = shops[0];
         event.preventDefault();
 
         const rect = mapContainer.getBoundingClientRect();
-        const around = map.unproject([
+        const zoomDelta = -event.deltaY * 0.01;
+        const containerPoint = L.point(
           event.clientX - rect.left,
           event.clientY - rect.top,
-        ]);
-        const zoomDelta = -event.deltaY * 0.01;
+        );
+        const nextDelta = pinchDelta - event.deltaY;
+        const steps = Math.trunc(nextDelta / PINCH_THRESHOLD);
 
-        map.easeTo({
-          zoom: clampZoom(map.getZoom() + zoomDelta),
-          around,
-          duration: 0,
-        });
+        pinchDelta = nextDelta;
+
+        if (steps !== 0) {
+          pinchDelta -= steps * PINCH_THRESHOLD;
+          queuedZoomSteps += steps;
+          queuedZoomPoint = containerPoint;
+          processQueuedZoom();
+        }
+
+        window.clearTimeout(pinchResetTimer ?? undefined);
+        pinchResetTimer = window.setTimeout(() => {
+          pinchDelta = 0;
+          pinchResetTimer = null;
+        }, 140);
       };
 
       mapContainer.addEventListener("wheel", handleTrackpadPinchZoom, {
@@ -183,7 +244,12 @@ const initialShop = shops[0];
       });
 
       const markerElements = new Map();
-      const bounds = new maplibregl.LngLatBounds();
+      const bounds =
+        shops.length > 0
+          ? L.latLngBounds(
+              shops.map((shop) => [shop.coordinates[1], shop.coordinates[0]]),
+            )
+          : null;
 
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
       const isSidebarHidden = () => root.classList.contains("is-sidebar-hidden");
@@ -235,204 +301,15 @@ const initialShop = shops[0];
       };
 
       const fitToMarkers = (duration) => {
-        if (shops.length === 0 || bounds.isEmpty()) return;
+        if (!bounds) return;
+        const padding = getPadding();
 
         map.fitBounds(bounds, {
-          padding: getPadding(),
-          maxZoom: 13.15,
-          duration,
-          essential: true,
+          paddingTopLeft: [padding.left, padding.top],
+          paddingBottomRight: [padding.right, padding.bottom],
+          maxZoom: 13,
+          animate: duration > 0,
         });
-      };
-
-      const applyMapTheme = () => {
-        const layers = map.getStyle().layers ?? [];
-
-        const isGreenArea = (id, sourceLayer) =>
-          sourceLayer === "park" ||
-          sourceLayer === "landcover" ||
-          /(park|green|wood|forest|grass|nature|recreation|golf|garden)/.test(
-            id,
-          );
-
-        for (const layer of layers) {
-          const id = layer.id.toLowerCase();
-          const sourceLayer =
-            typeof layer["source-layer"] === "string"
-              ? layer["source-layer"].toLowerCase()
-              : "";
-
-          if (layer.type === "symbol") {
-            if (
-              id.includes("place") ||
-              id.includes("water") ||
-              id.includes("marine")
-            ) {
-              try {
-                map.setPaintProperty(layer.id, "text-opacity", 0.68);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "text-color", "#666");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "icon-opacity", 0);
-              } catch {}
-            } else {
-              try {
-                map.setLayoutProperty(layer.id, "visibility", "none");
-              } catch {}
-            }
-          }
-
-          if (
-            layer.type === "line" &&
-            /(road|street|highway|bridge|tunnel|rail|transport)/.test(id)
-          ) {
-            try {
-              map.setPaintProperty(
-                layer.id,
-                "line-color",
-                "#ffffff",
-              );
-            } catch {}
-            try {
-              map.setPaintProperty(
-                layer.id,
-                "line-opacity",
-                id.includes("rail") ? 0.35 : 1,
-              );
-            } catch {}
-            try {
-              map.setPaintProperty(layer.id, "line-width", [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                9,
-                id.includes("highway") ? 1.2 : 0.75,
-                12,
-                id.includes("highway") ? 2.55 : 1.45,
-                15,
-                id.includes("highway") ? 4.2 : 2.25,
-              ]);
-            } catch {}
-            try {
-              map.setPaintProperty(layer.id, "line-blur", 0);
-            } catch {}
-            try {
-              map.setLayoutProperty(layer.id, "line-cap", "round");
-            } catch {}
-            try {
-              map.setLayoutProperty(layer.id, "line-join", "round");
-            } catch {}
-          }
-
-          if (layer.type === "fill") {
-            if (sourceLayer === "water" || id.includes("water")) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#e5eef4");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.95);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-outline-color", "#cfdde6");
-              } catch {}
-              continue;
-            }
-
-            if (isGreenArea(id, sourceLayer)) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#eef5eb");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.92);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-outline-color", "#dde8d7");
-              } catch {}
-
-              continue;
-            }
-
-            if (
-              sourceLayer === "landuse" &&
-              (id.includes("residential") || id.includes("cemetery"))
-            ) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#f7f7f7");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.96);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-outline-color", "#e2e2e2");
-              } catch {}
-
-              continue;
-            }
-
-            if (
-              sourceLayer === "landuse" &&
-              (id.includes("industrial") ||
-                id.includes("commercial") ||
-                id.includes("stadium"))
-            ) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#f1f2f3");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.95);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-outline-color", "#dfdfdf");
-              } catch {}
-
-              continue;
-            }
-
-            if (id.includes("school") || id.includes("hospital")) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#f4f6f7");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.93);
-              } catch {}
-
-              continue;
-            }
-
-            if (id.includes("aeroway") || id.includes("airport")) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#f1f2f3");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.92);
-              } catch {}
-
-              continue;
-            }
-
-            if (sourceLayer === "building" || id.includes("building")) {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#ececec");
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-opacity", 0.74);
-              } catch {}
-              try {
-                map.setPaintProperty(layer.id, "fill-outline-color", "#e0e0e0");
-              } catch {}
-
-              continue;
-            }
-
-            if (sourceLayer === "land" || id === "background" || id === "land") {
-              try {
-                map.setPaintProperty(layer.id, "fill-color", "#ffffff");
-              } catch {}
-            }
-          }
-        }
       };
 
       const setActiveShop = (shop, options = {}) => {
@@ -465,8 +342,6 @@ const initialShop = shops[0];
 
       const addMarkers = () => {
         for (const shop of shops) {
-          bounds.extend(shop.coordinates);
-
           const markerElement = document.createElement("button");
           markerElement.type = "button";
           markerElement.className = "coffee-marker";
@@ -479,18 +354,25 @@ const initialShop = shops[0];
             </span>
           `;
 
-          markerElement.addEventListener("click", () =>
-            setActiveShop(shop, { revealSidebar: true }),
-          );
-
-          new maplibregl.Marker({
-            element: markerElement,
-            anchor: "center",
+          const marker = L.marker([shop.coordinates[1], shop.coordinates[0]], {
+            title: shop.name,
+            alt: shop.name,
+            keyboard: false,
+            riseOnHover: true,
+            icon: L.divIcon({
+              html: markerElement.outerHTML,
+              className: "coffee-marker-wrapper",
+              iconSize: [54, 54],
+              iconAnchor: [27, 27],
+            }),
           })
-            .setLngLat(shop.coordinates)
-            .addTo(map);
+            .addTo(map)
+            .on("click", () => setActiveShop(shop, { revealSidebar: true }));
 
-          markerElements.set(shop.id, markerElement);
+          const liveMarker = marker.getElement()?.querySelector(".coffee-marker");
+          if (liveMarker instanceof HTMLElement) {
+            markerElements.set(shop.id, liveMarker);
+          }
         }
       };
 
@@ -581,11 +463,11 @@ const initialShop = shops[0];
 
       sidebarReopen.addEventListener("click", () => {
         showSidebar();
-        map.resize();
+        map.invalidateSize();
       });
 
       const resizeObserver = new ResizeObserver(() => {
-        map.resize();
+        map.invalidateSize();
       });
 
       resizeObserver.observe(mapContainer);
@@ -595,15 +477,15 @@ const initialShop = shops[0];
         }
         syncSidebarWidth();
         syncSidebarVisibility();
-        map.resize();
+        map.invalidateSize();
       });
       window.addEventListener("pagehide", () => {
         resizeObserver.disconnect();
+        window.clearTimeout(pinchResetTimer ?? undefined);
         map.remove();
       });
 
-      map.once("load", () => {
-        applyMapTheme();
+      map.whenReady(() => {
         addMarkers();
 
         if (shops[0]) {
@@ -611,6 +493,7 @@ const initialShop = shops[0];
         }
 
         fitToMarkers(0);
+        requestAnimationFrame(() => map.invalidateSize());
         requestAnimationFrame(() => fitToMarkers(1600));
       });
     }
@@ -645,7 +528,7 @@ const initialShop = shops[0];
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 4;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -676,7 +559,7 @@ const initialShop = shops[0];
     position: absolute;
     top: 1rem;
     left: 1rem;
-    z-index: 5;
+    z-index: 1001;
     width: 2.5rem;
     height: 2.5rem;
     padding: 0;
@@ -736,7 +619,7 @@ const initialShop = shops[0];
     top: 0;
     right: -0.375rem;
     bottom: 0;
-    z-index: 5;
+    z-index: 1002;
     width: 0.75rem;
     padding: 0;
     cursor: ew-resize;
@@ -966,32 +849,42 @@ const initialShop = shops[0];
     outline: none;
   }
 
-  .coffee-map-section .maplibregl-canvas {
-    filter: contrast(1.02) saturate(1);
+  .coffee-map-section .leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: #eef1f3;
   }
 
-  .coffee-map-section .maplibregl-ctrl-bottom-right,
-  .coffee-map-section .maplibregl-ctrl-bottom-left {
+  .coffee-map-section .leaflet-tile {
+    outline: 1px solid transparent;
+  }
+
+  .coffee-map-section .coffee-marker-wrapper {
+    background: transparent;
+    border: 0;
+  }
+
+  .coffee-map-section .leaflet-bottom.leaflet-right,
+  .coffee-map-section .leaflet-bottom.leaflet-left {
     margin: 0 1rem 1rem;
   }
 
-  .coffee-map-section .maplibregl-ctrl-group,
-  .coffee-map-section .maplibregl-compact {
+  .coffee-map-section .leaflet-control-attribution {
     border: 1px solid rgba(229, 229, 229, 0.96);
     border-radius: 999px;
     overflow: hidden;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
-  }
-
-  .coffee-map-section .maplibregl-ctrl button {
-    width: 2.4rem;
-    height: 2.4rem;
     background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    margin: 0;
+    padding: 0.3rem 0.65rem;
+    color: #666;
+    font-size: 0.72rem;
+    line-height: 1.2;
   }
 
-  .coffee-map-section .maplibregl-compact {
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(12px);
+  .coffee-map-section .leaflet-control-attribution a {
+    color: #555;
   }
 
   @media (max-width: 900px) {
@@ -1008,8 +901,8 @@ const initialShop = shops[0];
       display: none;
     }
 
-    .coffee-map-section .maplibregl-ctrl-bottom-right,
-    .coffee-map-section .maplibregl-ctrl-bottom-left {
+    .coffee-map-section .leaflet-bottom.leaflet-right,
+    .coffee-map-section .leaflet-bottom.leaflet-left {
       margin-bottom: 1rem;
     }
   }
