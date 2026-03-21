@@ -1,0 +1,817 @@
+---
+import "maplibre-gl/dist/maplibre-gl.css";
+import type { CoffeeShop } from "../data/coffeeShops";
+
+interface Props {
+  title?: string;
+  cityLabel?: string;
+  shops: CoffeeShop[];
+  center?: [number, number];
+}
+
+const {
+  title = "Favorite Coffee Shops",
+  cityLabel = "San Francisco, California",
+  shops,
+  center = [-122.433, 37.764],
+} = Astro.props;
+
+const mapId = "favorite-coffee-map";
+const initialShop = shops[0];
+---
+
+<section
+  id="coffee-map"
+  class="coffee-map-section"
+  aria-labelledby="coffee-map-title"
+  data-map-root={mapId}
+  data-center={JSON.stringify(center)}
+  data-shops={JSON.stringify(shops)}
+>
+  <div class="coffee-map-frame">
+    <div class="coffee-map-canvas" id={mapId} data-map-canvas></div>
+
+    <button
+      class="coffee-sidebar-toggle"
+      type="button"
+      aria-expanded="true"
+      aria-controls="coffee-map-sidebar"
+      data-sidebar-toggle
+    >
+      <span class="coffee-sidebar-toggle__icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+
+    <aside
+      id="coffee-map-sidebar"
+      class="coffee-map-sidebar"
+      data-sidebar
+      aria-label="Coffee shop list"
+    >
+      <div class="coffee-map-sidebar__header">
+        <p class="coffee-map-sidebar__eyebrow">{cityLabel}</p>
+        <h2 id="coffee-map-title">{title}</h2>
+      </div>
+
+      <div class="coffee-map-sidebar__list" data-shop-list>
+        {
+          shops.map((shop, index) => (
+            <button
+              class={`coffee-shop-item ${index === 0 ? "is-active" : ""}`}
+              type="button"
+              data-shop-item
+              data-shop-id={shop.id}
+              style={`--shop-accent: ${shop.accent};`}
+            >
+              <span class="coffee-shop-item__badge">{shop.monogram}</span>
+              <span class="coffee-shop-item__text">
+                <span class="coffee-shop-item__name">{shop.name}</span>
+                {shop.description && (
+                  <span class="coffee-shop-item__description">
+                    {shop.description}
+                  </span>
+                )}
+              </span>
+            </button>
+          ))
+        }
+      </div>
+
+      <article class="coffee-map-detail" data-coffee-card>
+        <p class="coffee-map-detail__kicker">
+          <span class="coffee-map-detail__accent" data-coffee-accent></span>
+          Selected cafe
+        </p>
+        <h3 data-coffee-title>{initialShop?.name}</h3>
+        <p data-coffee-description>{initialShop?.description}</p>
+      </article>
+    </aside>
+  </div>
+</section>
+
+<script>
+  import maplibregl from "maplibre-gl";
+
+  const root = document.querySelector('[data-map-root="favorite-coffee-map"]');
+
+  if (root instanceof HTMLElement) {
+    const shops = JSON.parse(root.dataset.shops ?? "[]");
+    const center = JSON.parse(root.dataset.center ?? "[-122.433, 37.764]");
+    const mapContainer = root.querySelector("[data-map-canvas]");
+    const card = root.querySelector("[data-coffee-card]");
+    const title = root.querySelector("[data-coffee-title]");
+    const description = root.querySelector("[data-coffee-description]");
+    const accent = root.querySelector("[data-coffee-accent]");
+    const sidebar = root.querySelector("[data-sidebar]");
+    const sidebarToggle = root.querySelector("[data-sidebar-toggle]");
+    const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
+
+    if (
+      mapContainer instanceof HTMLElement &&
+      card instanceof HTMLElement &&
+      title instanceof HTMLElement &&
+      description instanceof HTMLElement &&
+      accent instanceof HTMLElement &&
+      sidebar instanceof HTMLElement &&
+      sidebarToggle instanceof HTMLButtonElement &&
+      mapContainer.dataset.initialized !== "true"
+    ) {
+      mapContainer.dataset.initialized = "true";
+
+      const primaryStyle =
+        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
+      const map = new maplibregl.Map({
+        container: mapContainer,
+        style: primaryStyle,
+        center,
+        zoom: 11.2,
+        attributionControl: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+        cooperativeGestures: false,
+      });
+
+      map.touchZoomRotate.disableRotation();
+      map.scrollZoom.disable();
+      map.keyboard.disable();
+      map.doubleClickZoom.disable();
+      map.addControl(
+        new maplibregl.NavigationControl({
+          showCompass: false,
+          visualizePitch: false,
+        }),
+        "bottom-right",
+      );
+      map.addControl(
+        new maplibregl.AttributionControl({ compact: true }),
+        "bottom-left",
+      );
+
+      const markerElements = new Map();
+      const bounds = new maplibregl.LngLatBounds();
+
+      const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
+
+      const getPadding = () => {
+        const sidebarOpen = !root.classList.contains("is-sidebar-collapsed");
+
+        if (isCompact()) {
+          return { top: 28, right: 28, bottom: 28, left: 28 };
+        }
+
+        return sidebarOpen
+          ? { top: 56, right: 56, bottom: 56, left: 392 }
+          : { top: 56, right: 56, bottom: 56, left: 92 };
+      };
+
+      const fitToMarkers = (duration) => {
+        if (shops.length === 0 || bounds.isEmpty()) return;
+
+        map.fitBounds(bounds, {
+          padding: getPadding(),
+          maxZoom: 13.15,
+          duration,
+          essential: true,
+        });
+      };
+
+      const applyMapTheme = () => {
+        const layers = map.getStyle().layers ?? [];
+
+        const isGreenArea = (id, sourceLayer) =>
+          sourceLayer === "park" ||
+          sourceLayer === "landcover" ||
+          /(park|green|wood|forest|grass|nature|recreation|golf|garden)/.test(
+            id,
+          );
+
+        for (const layer of layers) {
+          const id = layer.id.toLowerCase();
+          const sourceLayer =
+            typeof layer["source-layer"] === "string"
+              ? layer["source-layer"].toLowerCase()
+              : "";
+
+          if (layer.type === "symbol") {
+            if (
+              id.includes("place") ||
+              id.includes("water") ||
+              id.includes("marine")
+            ) {
+              try {
+                map.setPaintProperty(layer.id, "text-opacity", 0.68);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "text-color", "#666");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "icon-opacity", 0);
+              } catch {}
+            } else {
+              try {
+                map.setLayoutProperty(layer.id, "visibility", "none");
+              } catch {}
+            }
+          }
+
+          if (
+            layer.type === "line" &&
+            /(road|street|highway|bridge|tunnel|rail|transport)/.test(id)
+          ) {
+            try {
+              map.setPaintProperty(
+                layer.id,
+                "line-color",
+                "#ffffff",
+              );
+            } catch {}
+            try {
+              map.setPaintProperty(
+                layer.id,
+                "line-opacity",
+                id.includes("rail") ? 0.35 : 1,
+              );
+            } catch {}
+            try {
+              map.setPaintProperty(layer.id, "line-width", [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                9,
+                id.includes("highway") ? 1.2 : 0.75,
+                12,
+                id.includes("highway") ? 2.55 : 1.45,
+                15,
+                id.includes("highway") ? 4.2 : 2.25,
+              ]);
+            } catch {}
+            try {
+              map.setPaintProperty(layer.id, "line-blur", 0);
+            } catch {}
+            try {
+              map.setLayoutProperty(layer.id, "line-cap", "round");
+            } catch {}
+            try {
+              map.setLayoutProperty(layer.id, "line-join", "round");
+            } catch {}
+          }
+
+          if (layer.type === "fill") {
+            if (sourceLayer === "water" || id.includes("water")) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#e5eef4");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.95);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-outline-color", "#cfdde6");
+              } catch {}
+              continue;
+            }
+
+            if (isGreenArea(id, sourceLayer)) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#eef5eb");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.92);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-outline-color", "#dde8d7");
+              } catch {}
+
+              continue;
+            }
+
+            if (
+              sourceLayer === "landuse" &&
+              (id.includes("residential") || id.includes("cemetery"))
+            ) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#f7f7f7");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.96);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-outline-color", "#e2e2e2");
+              } catch {}
+
+              continue;
+            }
+
+            if (
+              sourceLayer === "landuse" &&
+              (id.includes("industrial") ||
+                id.includes("commercial") ||
+                id.includes("stadium"))
+            ) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#f1f2f3");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.95);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-outline-color", "#dfdfdf");
+              } catch {}
+
+              continue;
+            }
+
+            if (id.includes("school") || id.includes("hospital")) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#f4f6f7");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.93);
+              } catch {}
+
+              continue;
+            }
+
+            if (id.includes("aeroway") || id.includes("airport")) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#f1f2f3");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.92);
+              } catch {}
+
+              continue;
+            }
+
+            if (sourceLayer === "building" || id.includes("building")) {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#ececec");
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-opacity", 0.74);
+              } catch {}
+              try {
+                map.setPaintProperty(layer.id, "fill-outline-color", "#e0e0e0");
+              } catch {}
+
+              continue;
+            }
+
+            if (sourceLayer === "land" || id === "background" || id === "land") {
+              try {
+                map.setPaintProperty(layer.id, "fill-color", "#ffffff");
+              } catch {}
+            }
+          }
+        }
+      };
+
+      const setActiveShop = (shop) => {
+        title.textContent = shop.name;
+        description.textContent = shop.description ?? "";
+        accent.style.backgroundColor = shop.accent;
+        card.style.setProperty("--card-accent", shop.accent);
+
+        markerElements.forEach((markerElement, shopId) => {
+          markerElement.classList.toggle("is-active", shopId === shop.id);
+        });
+
+        for (const item of listItems) {
+          const isActive = item instanceof HTMLElement && item.dataset.shopId === shop.id;
+          item.classList.toggle("is-active", isActive);
+          if (isActive) {
+            item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          }
+        }
+      };
+
+      const addMarkers = () => {
+        for (const shop of shops) {
+          bounds.extend(shop.coordinates);
+
+          const markerElement = document.createElement("button");
+          markerElement.type = "button";
+          markerElement.className = "coffee-marker";
+          markerElement.setAttribute("aria-label", shop.name);
+          markerElement.style.setProperty("--marker-accent", shop.accent);
+          markerElement.innerHTML = `
+            <span class="coffee-marker__halo"></span>
+            <span class="coffee-marker__core">
+              <span class="coffee-marker__label">${shop.monogram}</span>
+            </span>
+          `;
+
+          markerElement.addEventListener("click", () => setActiveShop(shop));
+
+          new maplibregl.Marker({
+            element: markerElement,
+            anchor: "center",
+          })
+            .setLngLat(shop.coordinates)
+            .addTo(map);
+
+          markerElements.set(shop.id, markerElement);
+        }
+      };
+
+      for (const item of listItems) {
+        item.addEventListener("click", () => {
+          const shop = shops.find((entry) => entry.id === item.dataset.shopId);
+          if (shop) setActiveShop(shop);
+        });
+      }
+
+      sidebarToggle.addEventListener("click", () => {
+        const collapsed = root.classList.toggle("is-sidebar-collapsed");
+        sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+        window.setTimeout(() => {
+          map.resize();
+          fitToMarkers(350);
+        }, 260);
+      });
+
+      const resizeObserver = new ResizeObserver(() => {
+        map.resize();
+      });
+
+      resizeObserver.observe(mapContainer);
+      window.addEventListener("resize", () => fitToMarkers(0));
+      window.addEventListener("pagehide", () => {
+        resizeObserver.disconnect();
+        map.remove();
+      });
+
+      map.once("load", () => {
+        applyMapTheme();
+        addMarkers();
+
+        if (shops[0]) {
+          setActiveShop(shops[0]);
+        }
+
+        fitToMarkers(0);
+        requestAnimationFrame(() => fitToMarkers(1600));
+      });
+    }
+  }
+</script>
+
+<style is:global>
+  .coffee-map-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .coffee-map-frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-top: 1px solid #e5e5e5;
+    background: #fff;
+  }
+
+  .coffee-map-canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .coffee-map-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: min(22rem, 100vw - 3rem);
+    padding: 1rem;
+    background: rgba(249, 249, 249, 0.94);
+    border-right: 1px solid rgba(229, 229, 229, 0.96);
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(18px);
+    transform: translateX(0);
+    transition:
+      transform 260ms ease,
+      opacity 220ms ease;
+  }
+
+  .coffee-map-section.is-sidebar-collapsed .coffee-map-sidebar {
+    transform: translateX(calc(-100% - 1rem));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .coffee-sidebar-toggle {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.72rem 0.95rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 1rem;
+    background: rgba(249, 249, 249, 0.96);
+    color: #333;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(14px);
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      left 260ms ease;
+  }
+
+  .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
+    left: calc(min(22rem, 100vw - 3rem) + 1rem);
+  }
+
+  .coffee-sidebar-toggle:hover {
+    transform: translateY(-1px);
+  }
+
+  .coffee-sidebar-toggle__icon {
+    display: inline-grid;
+    gap: 0.18rem;
+  }
+
+  .coffee-sidebar-toggle__icon span {
+    display: block;
+    width: 1rem;
+    height: 2px;
+    border-radius: 999px;
+    background: #666;
+  }
+
+  .coffee-map-sidebar__header {
+    padding: 0.15rem 0.15rem 0 0.15rem;
+  }
+
+  .coffee-map-sidebar__eyebrow {
+    margin: 0 0 0.45rem;
+    color: #666;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .coffee-map-sidebar__header h2 {
+    margin: 0;
+    color: #333;
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    line-height: 1;
+  }
+
+  .coffee-map-sidebar__list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .coffee-shop-item {
+    display: grid;
+    grid-template-columns: 2.8rem 1fr;
+    gap: 0.8rem;
+    align-items: start;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, 0.82);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-shop-item:hover,
+  .coffee-shop-item:focus-visible,
+  .coffee-shop-item.is-active {
+    border-color: color-mix(in srgb, var(--shop-accent) 24%, #d9d9d9);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  .coffee-shop-item:focus-visible {
+    outline: none;
+  }
+
+  .coffee-shop-item__badge {
+    display: grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 999px;
+    background: var(--shop-accent);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow:
+      0 10px 24px color-mix(in srgb, var(--shop-accent) 20%, transparent),
+      0 0 0 2px rgba(255, 255, 255, 0.94);
+  }
+
+  .coffee-shop-item__text {
+    display: grid;
+    gap: 0.28rem;
+  }
+
+  .coffee-shop-item__name {
+    color: #333;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  .coffee-shop-item__description {
+    color: #666;
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+
+  .coffee-map-detail {
+    --card-accent: #b77b5c;
+    padding: 1rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 1.3rem;
+    background: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .coffee-map-detail__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.6rem;
+    color: #666;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .coffee-map-detail__accent {
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 999px;
+    background: var(--card-accent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--card-accent) 18%, transparent);
+  }
+
+  .coffee-map-detail h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.28rem;
+  }
+
+  .coffee-map-detail p:last-child {
+    margin: 0.5rem 0 0;
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .coffee-marker {
+    --marker-accent: #b77b5c;
+    position: relative;
+    width: 3.4rem;
+    height: 3.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 180ms ease;
+  }
+
+  .coffee-marker:hover,
+  .coffee-marker:focus-visible,
+  .coffee-marker.is-active {
+    transform: scale(1.08);
+  }
+
+  .coffee-marker__halo,
+  .coffee-marker__core {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+  }
+
+  .coffee-marker__halo {
+    background: color-mix(in srgb, var(--marker-accent) 26%, white);
+    transform: scale(1.12);
+    opacity: 0.82;
+    transition:
+      transform 200ms ease,
+      opacity 200ms ease;
+  }
+
+  .coffee-marker__core {
+    display: grid;
+    place-items: center;
+    background: var(--marker-accent);
+    color: #fffaf5;
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.14),
+      0 0 0 2px rgba(255, 255, 255, 0.96);
+  }
+
+  .coffee-marker__label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .coffee-marker.is-active .coffee-marker__halo,
+  .coffee-marker:hover .coffee-marker__halo,
+  .coffee-marker:focus-visible .coffee-marker__halo {
+    transform: scale(1.24);
+    opacity: 1;
+  }
+
+  .coffee-marker:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-section .maplibregl-canvas {
+    filter: contrast(1.02) saturate(1);
+  }
+
+  .coffee-map-section .maplibregl-ctrl-bottom-right,
+  .coffee-map-section .maplibregl-ctrl-bottom-left {
+    margin: 0 1rem 1rem;
+  }
+
+  .coffee-map-section .maplibregl-ctrl-group,
+  .coffee-map-section .maplibregl-compact {
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  }
+
+  .coffee-map-section .maplibregl-ctrl button {
+    width: 2.4rem;
+    height: 2.4rem;
+    background: rgba(255, 255, 255, 0.97);
+  }
+
+  .coffee-map-section .maplibregl-compact {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+  }
+
+  @media (max-width: 900px) {
+    .coffee-map-sidebar {
+      width: min(20rem, calc(100vw - 1.5rem));
+      padding: 0.85rem;
+    }
+
+    .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
+      left: calc(min(20rem, calc(100vw - 1.5rem)) + 0.5rem);
+    }
+
+    .coffee-map-section .maplibregl-ctrl-bottom-right,
+    .coffee-map-section .maplibregl-ctrl-bottom-left {
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .coffee-map-sidebar {
+      width: calc(100vw - 1rem);
+    }
+
+    .coffee-map-section:not(.is-sidebar-collapsed) .coffee-sidebar-toggle {
+      left: auto;
+      right: 1rem;
+    }
+
+    .coffee-map-section.is-sidebar-collapsed .coffee-sidebar-toggle {
+      left: 1rem;
+      right: auto;
+    }
+    .coffee-marker {
+      width: 3rem;
+      height: 3rem;
+    }
+  }
+</style>

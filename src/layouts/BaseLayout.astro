@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
 import "katex/dist/katex.min.css";
+
+const { title = "My Site", fullBleed = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -11,7 +13,7 @@ import "katex/dist/katex.min.css";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <title>{Astro.props.title ?? "My Site"}</title>
+    <title>{title}</title>
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"
@@ -34,13 +36,14 @@ import "katex/dist/katex.min.css";
         <a href="/" class="site-title">Andre Amor</a>
         <nav>
           <ul class="nav-links">
-            <li><a href="/#hero">Home</a></li>
+            <li><a href="/#about">Home</a></li>
             <li><a href="/reading">Reading List</a></li>
+            <li><a href="/coffee-map">Coffee Map</a></li>
           </ul>
         </nav>
       </div>
     </header>
-    <main class="container">
+    <main class={fullBleed ? "page-shell page-shell--full" : "container"}>
       <slot />
     </main>
     <script is:inline>
