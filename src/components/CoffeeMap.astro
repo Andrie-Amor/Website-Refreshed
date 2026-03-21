@@ -140,16 +140,36 @@ const initialShop = shops[0];
       map.keyboard.disable();
       map.doubleClickZoom.disable();
       map.addControl(
-        new maplibregl.NavigationControl({
-          showCompass: false,
-          visualizePitch: false,
-        }),
-        "bottom-right",
-      );
-      map.addControl(
         new maplibregl.AttributionControl({ compact: true }),
         "bottom-left",
       );
+
+      const clampZoom = (zoom) =>
+        Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
+
+      const handleTrackpadPinchZoom = (event) => {
+        // Trackpad pinch gestures surface as ctrl+wheel on desktop browsers.
+        if (!event.ctrlKey) return;
+
+        event.preventDefault();
+
+        const rect = mapContainer.getBoundingClientRect();
+        const around = map.unproject([
+          event.clientX - rect.left,
+          event.clientY - rect.top,
+        ]);
+        const zoomDelta = -event.deltaY * 0.01;
+
+        map.easeTo({
+          zoom: clampZoom(map.getZoom() + zoomDelta),
+          around,
+          duration: 0,
+        });
+      };
+
+      mapContainer.addEventListener("wheel", handleTrackpadPinchZoom, {
+        passive: false,
+      });
 
       const markerElements = new Map();
       const bounds = new maplibregl.LngLatBounds();
