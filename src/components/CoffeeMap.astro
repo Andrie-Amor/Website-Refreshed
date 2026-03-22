@@ -109,6 +109,7 @@ const initialShop = shops[0];
     const title = root.querySelector("[data-coffee-title]");
     const description = root.querySelector("[data-coffee-description]");
     const accent = root.querySelector("[data-coffee-accent]");
+    const shopList = root.querySelector("[data-shop-list]");
     const sidebar = root.querySelector("[data-sidebar]");
     const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
     const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
@@ -120,6 +121,7 @@ const initialShop = shops[0];
       title instanceof HTMLElement &&
       description instanceof HTMLElement &&
       accent instanceof HTMLElement &&
+      shopList instanceof HTMLElement &&
       sidebar instanceof HTMLElement &&
       sidebarResizer instanceof HTMLElement &&
       sidebarReopen instanceof HTMLButtonElement &&
@@ -263,11 +265,20 @@ const initialShop = shops[0];
         );
       const clampSidebarWidth = (width) =>
         Math.min(getSidebarMaxWidth(), Math.max(MIN_SIDEBAR_WIDTH, width));
+      const syncShopListScrollbarGap = () => {
+        const scrollbarGap = Math.max(
+          0,
+          shopList.offsetWidth - shopList.clientWidth,
+        );
+
+        root.style.setProperty("--shop-list-scrollbar-gap", `${scrollbarGap}px`);
+      };
       const syncSidebarWidth = () => {
         const width = clampSidebarWidth(currentSidebarWidth);
 
         currentSidebarWidth = width;
         root.style.setProperty("--sidebar-width", `${width}px`);
+        syncShopListScrollbarGap();
         sidebarResizer.setAttribute("aria-valuemin", String(MIN_SIDEBAR_WIDTH));
         sidebarResizer.setAttribute("aria-valuemax", String(getSidebarMaxWidth()));
         sidebarResizer.setAttribute("aria-valuenow", String(Math.round(width)));
@@ -315,11 +326,35 @@ const initialShop = shops[0];
         });
       };
 
+      const centerOnShop = (shop) => {
+        const padding = getPadding();
+        const zoom = map.getZoom();
+        const targetLatLng = L.latLng(shop.coordinates[1], shop.coordinates[0]);
+        const projectedPoint = map.project(targetLatLng, zoom);
+        const offsetPoint = L.point(
+          (padding.left - padding.right) / 2,
+          (padding.top - padding.bottom) / 2,
+        );
+        const centeredLatLng = map.unproject(
+          projectedPoint.subtract(offsetPoint),
+          zoom,
+        );
+
+        map.flyTo(centeredLatLng, zoom, {
+          animate: true,
+          duration: 0.85,
+        });
+      };
+
       const setActiveShop = (shop, options = {}) => {
-        const { revealSidebar = false } = options;
+        const { revealSidebar = false, centerMap = false } = options;
 
         if (revealSidebar) {
           showSidebar();
+        }
+
+        if (centerMap) {
+          centerOnShop(shop);
         }
 
         title.textContent = shop.name;
@@ -382,7 +417,9 @@ const initialShop = shops[0];
       for (const item of listItems) {
         item.addEventListener("click", () => {
           const shop = shops.find((entry) => entry.id === item.dataset.shopId);
-          if (shop) setActiveShop(shop, { revealSidebar: true });
+          if (shop) {
+            setActiveShop(shop, { revealSidebar: true, centerMap: true });
+          }
         });
       }
 
@@ -506,6 +543,8 @@ const initialShop = shops[0];
 <style is:global>
   .coffee-map-section {
     --sidebar-width: 22rem;
+    --shop-list-inline-gap: 0.7rem;
+    --shop-list-scrollbar-gap: 0px;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -678,7 +717,10 @@ const initialShop = shops[0];
     gap: 0.5rem;
     min-height: 0;
     overflow-y: auto;
-    padding-right: 0.25rem;
+    padding-top: 0.35rem;
+    padding-right: var(--shop-list-inline-gap);
+    padding-bottom: 0.2rem;
+    scrollbar-gutter: stable;
   }
 
   .coffee-shop-item {
@@ -750,6 +792,9 @@ const initialShop = shops[0];
 
   .coffee-map-detail {
     --card-accent: #b77b5c;
+    margin-right: calc(
+      var(--shop-list-scrollbar-gap) + var(--shop-list-inline-gap)
+    );
     padding: 1rem;
     border: 1px solid rgba(229, 229, 229, 0.96);
     border-radius: 1.3rem;
