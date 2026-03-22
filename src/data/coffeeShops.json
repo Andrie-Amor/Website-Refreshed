@@ -84,6 +84,39 @@
             }
           ]
         }
+      },
+      {
+        "id": "blue-bottle-pac-heights",
+        "name": "Blue Bottle",
+        "coordinates": [
+          -122.4346,
+          37.7926
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/blue-bottle-pac-heights.jpeg",
+        "website": "https://bluebottlecoffee.com/us/eng",
+        "neighborhood": "Pacific Heights",
+        "address": "2453 Fillmore St",
+        "addressUrl": "https://maps.app.goo.gl/JgFs874Lj7ABuBUq5",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "6 AM - 7 PM"
+            }
+          ]
+        }
       }
     ]
   }
