@@ -16,6 +16,7 @@ const PORT = Number(process.env.COFFEE_ADMIN_PORT || 4322);
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
 const SERVER_STARTED_AT = new Date().toISOString();
 const IS_WATCH_MODE = process.env.COFFEE_ADMIN_WATCH === "1";
+const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -62,16 +63,6 @@ function optionalString(value) {
   return normalized ? normalized : undefined;
 }
 
-function monogramFromName(name) {
-  const words = compactString(name)
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (words.length === 0) return "";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
-
 function normalizeAccent(value) {
   const normalized = compactString(value);
   if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized)) {
@@ -90,12 +81,50 @@ function normalizeCoordinate(value, label) {
   return Number(numeric.toFixed(6));
 }
 
+function optionalBoolean(value) {
+  if (value === true || value === "true" || value === 1 || value === "1") {
+    return true;
+  }
+
+  return undefined;
+}
+
+function normalizeHours(rawHours) {
+  if (typeof rawHours === "string") {
+    const label = optionalString(rawHours);
+    return label
+      ? [{ days: [...DAY_ORDER], label }]
+      : undefined;
+  }
+
+  if (!Array.isArray(rawHours)) {
+    return undefined;
+  }
+
+  const entries = rawHours
+    .map((entry) => {
+      const days = Array.isArray(entry?.days)
+        ? entry.days.filter((day) => DAY_ORDER.includes(day))
+        : [];
+      const label = optionalString(entry?.label);
+
+      if (days.length === 0 || !label) {
+        return null;
+      }
+
+      return { days, label };
+    })
+    .filter(Boolean);
+
+  return entries.length > 0 ? entries : undefined;
+}
+
 function normalizeDetails(rawDetails) {
   const details = {
-    wifi: optionalString(rawDetails?.wifi),
-    sockets: optionalString(rawDetails?.sockets),
-    seating: optionalString(rawDetails?.seating),
-    hours: optionalString(rawDetails?.hours),
+    wifi: optionalBoolean(rawDetails?.wifi),
+    sockets: optionalBoolean(rawDetails?.sockets),
+    seating: optionalBoolean(rawDetails?.seating),
+    hours: normalizeHours(rawDetails?.hours),
     food: optionalString(rawDetails?.food),
   };
 
@@ -115,13 +144,6 @@ function ensureShopPayload(rawShop) {
     throw new Error("A valid id could not be generated.");
   }
 
-  const monogram =
-    compactString(rawShop?.monogram).slice(0, 4).toUpperCase() ||
-    monogramFromName(name);
-  if (!monogram) {
-    throw new Error("Monogram is required.");
-  }
-
   const longitude = normalizeCoordinate(
     rawShop?.coordinates?.[0] ?? rawShop?.longitude,
     "Longitude",
@@ -136,7 +158,6 @@ function ensureShopPayload(rawShop) {
   return {
     id,
     name,
-    monogram,
     coordinates: [longitude, latitude],
     description: optionalString(rawShop?.description),
     accent: normalizeAccent(rawShop?.accent),
@@ -147,6 +168,7 @@ function ensureShopPayload(rawShop) {
     website: optionalString(rawShop?.website),
     neighborhood: optionalString(rawShop?.neighborhood),
     address: optionalString(rawShop?.address),
+    addressUrl: optionalString(rawShop?.addressUrl),
     details: Object.keys(details).length > 0 ? details : undefined,
   };
 }
@@ -271,9 +293,7 @@ async function handleSaveShop(request, response) {
   const body = await readJsonBody(request);
   const cityKey = compactString(body.cityKey);
   const previousShopId = compactString(body.previousShopId);
-  const removeLogo = Boolean(body.removeLogo);
   const hasAccentOverride = Boolean(compactString(body.shop?.accent));
-  const hasMonogramOverride = Boolean(compactString(body.shop?.monogram));
   const normalizedShop = ensureShopPayload(body.shop);
   const data = await readDataFile();
   const city = data[cityKey];
@@ -294,9 +314,12 @@ async function handleSaveShop(request, response) {
     throw new Error(`A shop with id "${normalizedShop.id}" already exists.`);
   }
 
-  let nextLogoPath = removeLogo ? null : existingShop?.logoPath ?? normalizedShop.logoPath;
+  let nextLogoPath = existingShop?.logoPath ?? normalizedShop.logoPath;
   if (body.logoUpload?.base64) {
     nextLogoPath = await persistLogo(normalizedShop.id, body.logoUpload);
+  }
+  if (!nextLogoPath) {
+    throw new Error("Logo is required.");
   }
 
   const nextShop = {
@@ -304,9 +327,6 @@ async function handleSaveShop(request, response) {
     accent: hasAccentOverride
       ? normalizedShop.accent
       : existingShop?.accent ?? normalizedShop.accent,
-    monogram: hasMonogramOverride
-      ? normalizedShop.monogram
-      : existingShop?.monogram ?? normalizedShop.monogram,
     logoPath: nextLogoPath,
   };
 
@@ -314,6 +334,7 @@ async function handleSaveShop(request, response) {
   if (!nextShop.website) delete nextShop.website;
   if (!nextShop.neighborhood) delete nextShop.neighborhood;
   if (!nextShop.address) delete nextShop.address;
+  if (!nextShop.addressUrl) delete nextShop.addressUrl;
   if (!nextShop.details || Object.keys(nextShop.details).length === 0) {
     delete nextShop.details;
   }
@@ -590,6 +611,25 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         grid-column: span 2;
       }
 
+      .hours-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem 0.75rem;
+      }
+
+      .hours-row {
+        display: grid;
+        gap: 0.22rem;
+      }
+
+      .hours-row span {
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
       .toggle-row {
         display: flex;
         flex-wrap: wrap;
@@ -735,6 +775,10 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           grid-column: span 1;
         }
 
+        .hours-grid {
+          grid-template-columns: 1fr;
+        }
+
         .form-actions {
           flex-direction: column;
           align-items: stretch;
@@ -804,15 +848,48 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                   <label for="address">Address</label>
                   <input id="address" name="address" type="text" />
                 </div>
+                <div class="field-group col-span-2">
+                  <label for="address-url">Address Link</label>
+                  <input id="address-url" name="addressUrl" type="url" placeholder="https://maps.google.com/..." />
+                </div>
 
                 <div class="field-group col-span-2">
                   <label for="description">Description</label>
                   <textarea id="description" name="description"></textarea>
                 </div>
 
-                <div class="field-group">
-                  <label for="hours">Hours</label>
-                  <input id="hours" name="hours" type="text" placeholder="Daily 7 AM - 5 PM" />
+                <div class="field-group col-span-2">
+                  <label>Hours</label>
+                  <div class="hours-grid">
+                    <label class="hours-row">
+                      <span>Sun</span>
+                      <input id="hours-sun" name="hoursSun" type="text" placeholder="Closed" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Mon</span>
+                      <input id="hours-mon" name="hoursMon" type="text" placeholder="9 AM - 5 PM" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Tue</span>
+                      <input id="hours-tue" name="hoursTue" type="text" placeholder="9 AM - 5 PM" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Wed</span>
+                      <input id="hours-wed" name="hoursWed" type="text" placeholder="9 AM - 5 PM" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Thu</span>
+                      <input id="hours-thu" name="hoursThu" type="text" placeholder="9 AM - 5 PM" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Fri</span>
+                      <input id="hours-fri" name="hoursFri" type="text" placeholder="9 AM - 5 PM" />
+                    </label>
+                    <label class="hours-row">
+                      <span>Sat</span>
+                      <input id="hours-sat" name="hoursSat" type="text" placeholder="Closed" />
+                    </label>
+                  </div>
                 </div>
                 <div class="field-group">
                   <label for="food">Food</label>
@@ -831,7 +908,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                 </div>
                 <div class="field-group">
                   <label for="logo-file">Logo Image</label>
-                  <input id="logo-file" name="logoFile" type="file" accept="image/*" />
+                  <input id="logo-file" name="logoFile" type="file" accept="image/*" required />
                 </div>
 
                 <div class="field-group col-span-2">
@@ -840,11 +917,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                     <div id="logo-fallback" class="logo-fallback">No logo</div>
                     <img id="logo-preview" alt="" hidden />
                     <div>
-                      <div id="logo-path" class="tiny">No saved logo yet.</div>
-                      <label class="inline-check" for="remove-logo">
-                        <input id="remove-logo" name="removeLogo" type="checkbox" />
-                        Remove current logo on save
-                      </label>
+                      <div id="logo-path" class="tiny">Upload a logo to save this shop.</div>
                     </div>
                   </div>
                 </div>
@@ -866,6 +939,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
     </div>
 
     <script>
+      const DAY_ORDER = ${JSON.stringify(DAY_ORDER)};
       const state = {
         data: null,
         cityKey: "",
@@ -884,11 +958,13 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       const logoPreview = document.getElementById("logo-preview");
       const logoFallback = document.getElementById("logo-fallback");
       const logoPathLabel = document.getElementById("logo-path");
-      const removeLogoInput = document.getElementById("remove-logo");
       const nameInput = document.getElementById("name");
       const idInput = document.getElementById("id");
       const detailToggleButtons = Array.from(document.querySelectorAll("[data-detail-toggle]"));
-      const ACTIVE_DETAIL_VALUE = "available";
+      const ACTIVE_DETAIL_VALUE = "true";
+      const hoursInputIds = Object.fromEntries(
+        DAY_ORDER.map((day) => [day, "hours-" + day.toLowerCase()]),
+      );
       let serverStartedAt = ${JSON.stringify(SERVER_STARTED_AT)};
 
       function slugify(value) {
@@ -946,7 +1022,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           return;
         }
 
-        if (selectedShop && selectedShop.logoPath && !removeLogoInput.checked) {
+        if (selectedShop && selectedShop.logoPath) {
           logoPreview.src = selectedShop.logoPath;
           logoPreview.hidden = false;
           logoFallback.hidden = true;
@@ -957,9 +1033,65 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         logoPreview.hidden = true;
         logoPreview.removeAttribute("src");
         logoFallback.hidden = false;
-        logoPathLabel.textContent = removeLogoInput.checked
-          ? "Current logo will be removed on save."
-          : "No saved logo yet.";
+        logoPathLabel.textContent = "Upload a logo to save this shop.";
+      }
+
+      function fillHoursInputs(hours) {
+        DAY_ORDER.forEach((day) => {
+          const input = document.getElementById(hoursInputIds[day]);
+          if (input) {
+            input.value = "";
+          }
+        });
+
+        if (!Array.isArray(hours)) {
+          return;
+        }
+
+        hours.forEach((entry) => {
+          if (!Array.isArray(entry?.days) || !entry?.label) {
+            return;
+          }
+
+          entry.days.forEach((day) => {
+            const input = document.getElementById(hoursInputIds[day]);
+            if (input) {
+              input.value = entry.label;
+            }
+          });
+        });
+      }
+
+      function buildHoursSchedule() {
+        const dailyLabels = DAY_ORDER.map((day) => {
+          const input = document.getElementById(hoursInputIds[day]);
+          return String(input?.value || "").trim().replace(/\s+/g, " ");
+        });
+
+        const entries = [];
+        let currentEntry = null;
+
+        dailyLabels.forEach((label, index) => {
+          const day = DAY_ORDER[index];
+
+          if (!label) {
+            currentEntry = null;
+            return;
+          }
+
+          if (currentEntry && currentEntry.label === label) {
+            currentEntry.days.push(day);
+            return;
+          }
+
+          currentEntry = {
+            days: [day],
+            label,
+          };
+          entries.push(currentEntry);
+        });
+
+        return entries;
       }
 
       function blankShop(city) {
@@ -968,15 +1100,16 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           name: "",
           coordinates: city?.center ? [city.center[0], city.center[1]] : [-122.433, 37.764],
           description: "",
-          logoPath: null,
+          logoPath: "",
           website: "",
           neighborhood: "",
           address: "",
+          addressUrl: "",
           details: {
-            wifi: "",
-            sockets: "",
-            seating: "",
-            hours: "",
+            wifi: false,
+            sockets: false,
+            seating: false,
+            hours: [],
             food: "",
           },
         };
@@ -1017,15 +1150,16 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         document.getElementById("website").value = shop.website || "";
         document.getElementById("neighborhood").value = shop.neighborhood || "";
         document.getElementById("address").value = shop.address || "";
+        document.getElementById("address-url").value = shop.addressUrl || "";
         document.getElementById("description").value = shop.description || "";
-        document.getElementById("hours").value = shop.details?.hours || "";
+        fillHoursInputs(shop.details?.hours || []);
         document.getElementById("food").value = shop.details?.food || "";
-        document.getElementById("wifi").value = shop.details?.wifi || "";
-        document.getElementById("sockets").value = shop.details?.sockets || "";
-        document.getElementById("seating").value = shop.details?.seating || "";
+        document.getElementById("wifi").value = shop.details?.wifi ? ACTIVE_DETAIL_VALUE : "";
+        document.getElementById("sockets").value = shop.details?.sockets ? ACTIVE_DETAIL_VALUE : "";
+        document.getElementById("seating").value = shop.details?.seating ? ACTIVE_DETAIL_VALUE : "";
         syncDetailToggleButtons();
         logoFileInput.value = "";
-        removeLogoInput.checked = false;
+        logoFileInput.required = !shop.logoPath;
         updateLogoPreview();
       }
 
@@ -1050,7 +1184,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             image.alt = "";
             avatar.append(image);
           } else {
-            avatar.textContent = shop.monogram || "--";
+            avatar.textContent = "No logo";
           }
 
           const content = document.createElement("div");
@@ -1109,7 +1243,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         return {
           cityKey: citySelect.value,
           previousShopId: state.selectedShopId,
-          removeLogo: removeLogoInput.checked,
           shop: {
             id: document.getElementById("id").value,
             name: document.getElementById("name").value,
@@ -1120,9 +1253,10 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             website: document.getElementById("website").value,
             neighborhood: document.getElementById("neighborhood").value,
             address: document.getElementById("address").value,
+            addressUrl: document.getElementById("address-url").value,
             description: document.getElementById("description").value,
             details: {
-              hours: document.getElementById("hours").value,
+              hours: buildHoursSchedule(),
               food: document.getElementById("food").value,
               wifi: document.getElementById("wifi").value,
               sockets: document.getElementById("sockets").value,
@@ -1242,7 +1376,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       });
 
       logoFileInput.addEventListener("change", updateLogoPreview);
-      removeLogoInput.addEventListener("change", updateLogoPreview);
 
       detailToggleButtons.forEach((button) => {
         button.addEventListener("click", () => {

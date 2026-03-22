@@ -1,25 +1,29 @@
 import coffeeCitiesData from "./coffeeShops.json";
 
+export type CoffeeShopHoursEntry = {
+  days: string[];
+  label: string;
+};
+
 export type CoffeeShopDetails = {
-  wifi?: string;
-  sockets?: string;
-  seating?: string;
-  hours?: string;
+  wifi?: boolean;
+  sockets?: boolean;
+  seating?: boolean;
+  hours?: CoffeeShopHoursEntry[];
   food?: string;
-  notes?: string;
 };
 
 export type CoffeeShop = {
   id: string;
   name: string;
-  monogram: string;
   coordinates: [number, number];
   description?: string;
   accent: string;
-  logoPath?: string | null;
+  logoPath: string;
   website?: string;
   neighborhood?: string;
   address?: string;
+  addressUrl?: string;
   details?: CoffeeShopDetails;
 };
 

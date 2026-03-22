@@ -1,6 +1,6 @@
 ---
 import "leaflet/dist/leaflet.css";
-import type { CoffeeShop } from "../data/coffeeShops";
+import type { CoffeeShop, CoffeeShopHoursEntry } from "../data/coffeeShops";
 
 interface Props {
   title?: string;
@@ -17,6 +17,58 @@ const {
 } = Astro.props;
 
 const mapId = "favorite-coffee-map";
+const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const amenityDefinitions = {
+  wifi: {
+    label: "Wifi",
+    icon:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.7 8.9a14.8 14.8 0 0 1 18.6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M6 12.3a10 10 0 0 1 12 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M9.3 15.7a5.1 5.1 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><circle cx="12" cy="19" r="1.35" fill="currentColor"/></svg>',
+  },
+  sockets: {
+    label: "Sockets",
+    icon:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3.8v3.2M16 3.8v3.2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M7.2 7h9.6a1.8 1.8 0 0 1 1.8 1.8v3.8a6.6 6.6 0 0 1-6.6 6.6h0a6.6 6.6 0 0 1-6.6-6.6V8.8A1.8 1.8 0 0 1 7.2 7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 19.2V21" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+  },
+  seating: {
+    label: "Seating",
+    icon:
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 12.2V8.3a1.8 1.8 0 1 1 3.6 0v3.9M13.2 12.2V9.4a1.8 1.8 0 1 1 3.6 0v2.8M5.8 12.2h12.4v3.2H5.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 15.4V19.6M17 15.4V19.6M4.8 19.6h14.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+  },
+} as const;
+
+const formatDayRange = (days: string[]) => {
+  const indexes = days
+    .map((day) => DAY_ORDER.indexOf(day as (typeof DAY_ORDER)[number]))
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b);
+
+  if (indexes.length === 0) return days.join(", ");
+  if (indexes.length === 1) return DAY_ORDER[indexes[0]];
+
+  const isContiguous = indexes.every((index, offset) =>
+    offset === 0 ? true : index === indexes[offset - 1] + 1,
+  );
+
+  if (isContiguous) {
+    return `${DAY_ORDER[indexes[0]]}-${DAY_ORDER[indexes[indexes.length - 1]]}`;
+  }
+
+  return indexes.map((index) => DAY_ORDER[index]).join(", ");
+};
+
+const formatHoursEntry = (entry: CoffeeShopHoursEntry) =>
+  `${formatDayRange(entry.days)} ${entry.label}`;
+
+const formatHoursSummary = (hours?: CoffeeShopHoursEntry[]) =>
+  hours?.map(formatHoursEntry).join(" · ") ?? "";
+
+const getSidebarMeta = (shop: CoffeeShop) =>
+  [shop.neighborhood, formatHoursSummary(shop.details?.hours)].filter(Boolean).join(" • ");
+
+const getVisibleAmenities = (shop: CoffeeShop) =>
+  (Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>).filter(
+    (key) => Boolean(shop.details?.[key]),
+  );
 ---
 
 <section
@@ -25,6 +77,7 @@ const mapId = "favorite-coffee-map";
   aria-labelledby="coffee-map-title"
   data-map-root={mapId}
   data-center={JSON.stringify(center)}
+  data-amenity-definitions={JSON.stringify(amenityDefinitions)}
   data-shops={JSON.stringify(shops)}
 >
   <div class="coffee-map-frame">
@@ -58,12 +111,37 @@ const mapId = "favorite-coffee-map";
               data-shop-id={shop.id}
               style={`--shop-accent: ${shop.accent};`}
             >
-              <span class="coffee-shop-item__badge">{shop.monogram}</span>
+              <span class="coffee-shop-item__badge has-logo">
+                <img
+                  class="coffee-shop-item__badge-image"
+                  src={shop.logoPath}
+                  alt=""
+                  loading="lazy"
+                />
+              </span>
               <span class="coffee-shop-item__text">
                 <span class="coffee-shop-item__name">{shop.name}</span>
-                {shop.description && (
-                  <span class="coffee-shop-item__description">
-                    {shop.description}
+                {getSidebarMeta(shop) && (
+                  <span class="coffee-shop-item__meta">{getSidebarMeta(shop)}</span>
+                )}
+                {shop.address && (
+                  <span class="coffee-shop-item__address">{shop.address}</span>
+                )}
+                {getVisibleAmenities(shop).length > 0 && (
+                  <span class="coffee-shop-item__chips">
+                    {getVisibleAmenities(shop).map((amenity) => (
+                      <span
+                        class="coffee-shop-chip"
+                        aria-label={amenityDefinitions[amenity].label}
+                        title={amenityDefinitions[amenity].label}
+                      >
+                        <span
+                          class="coffee-shop-chip__icon"
+                          set:html={amenityDefinitions[amenity].icon}
+                        />
+                        <span class="sr-only">{amenityDefinitions[amenity].label}</span>
+                      </span>
+                    ))}
                   </span>
                 )}
               </span>
@@ -91,6 +169,8 @@ const mapId = "favorite-coffee-map";
   const root = document.querySelector('[data-map-root="favorite-coffee-map"]');
 
   if (root instanceof HTMLElement) {
+    const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const amenityDefinitions = JSON.parse(root.dataset.amenityDefinitions ?? "{}");
     const shops = JSON.parse(root.dataset.shops ?? "[]");
     const center = JSON.parse(root.dataset.center ?? "[-122.433, 37.764]");
     const mapContainer = root.querySelector("[data-map-canvas]");
@@ -369,20 +449,184 @@ const mapId = "favorite-coffee-map";
         offset: [0, -26],
       });
 
+      const getVisibleAmenities = (shop) =>
+        Object.keys(amenityDefinitions).filter((key) => Boolean(shop.details?.[key]));
+
+      const formatDayRange = (days) => {
+        const indexes = days
+          .map((day) => DAY_ORDER.indexOf(day))
+          .filter((index) => index >= 0)
+          .sort((a, b) => a - b);
+
+        if (indexes.length === 0) return days.join(", ");
+        if (indexes.length === 1) return DAY_ORDER[indexes[0]];
+
+        const isContiguous = indexes.every((index, offset) =>
+          offset === 0 ? true : index === indexes[offset - 1] + 1,
+        );
+
+        if (isContiguous) {
+          return DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]];
+        }
+
+        return indexes.map((index) => DAY_ORDER[index]).join(", ");
+      };
+
+      const formatHoursSummary = (hours) =>
+        Array.isArray(hours)
+          ? hours.map((entry) => formatDayRange(entry.days || []) + " " + (entry.label || "")).join(" · ")
+          : "";
+
+      const appendShopIdentity = (container, shop, imageClassName) => {
+        const image = document.createElement("img");
+        image.className = imageClassName;
+        image.src = shop.logoPath;
+        image.alt = "";
+        container.classList.add("has-logo");
+        container.append(image);
+      };
+
+      const createAmenityChip = (kind) => {
+        const definition = amenityDefinitions?.[kind];
+        if (!definition) return null;
+
+        const chip = document.createElement("span");
+        chip.className = "coffee-shop-chip";
+        chip.setAttribute("aria-label", definition.label);
+        chip.title = definition.label;
+
+        const icon = document.createElement("span");
+        icon.className = "coffee-shop-chip__icon";
+        icon.innerHTML = definition.icon;
+        chip.append(icon);
+
+        const srText = document.createElement("span");
+        srText.className = "sr-only";
+        srText.textContent = definition.label;
+        chip.append(srText);
+
+        return chip;
+      };
+
       const createPopupContent = (shop) => {
         const popupContent = document.createElement("article");
         popupContent.className = "coffee-map-popup__content";
         popupContent.style.setProperty("--popup-accent", shop.accent);
 
+        const popupBody = document.createElement("div");
+        popupBody.className = "coffee-map-popup__body";
+
+        const popupHeader = document.createElement("div");
+        popupHeader.className = "coffee-map-popup__header";
+
+        const popupHeading = document.createElement("div");
+        popupHeading.className = "coffee-map-popup__heading";
+
+        const popupTitleRow = document.createElement("div");
+        popupTitleRow.className = "coffee-map-popup__title-row";
+
         const popupTitle = document.createElement("h3");
         popupTitle.textContent = shop.name;
+        popupTitleRow.append(popupTitle);
 
-        popupContent.append(popupTitle);
+        popupHeading.append(popupTitleRow);
+
+        if (shop.neighborhood) {
+          const popupNeighborhood = document.createElement("p");
+          popupNeighborhood.className = "coffee-map-popup__neighborhood";
+          popupNeighborhood.textContent = shop.neighborhood;
+          popupHeading.append(popupNeighborhood);
+        }
+
+        popupHeader.append(popupHeading);
+
+        popupBody.append(popupHeader);
+
+        const popupDetails = document.createElement("div");
+        popupDetails.className = "coffee-map-popup__details";
 
         if (shop.description) {
           const popupDescription = document.createElement("p");
+          popupDescription.className = "coffee-map-popup__description";
           popupDescription.textContent = shop.description;
-          popupContent.append(popupDescription);
+          popupDetails.append(popupDescription);
+        }
+
+        if (Array.isArray(shop.details?.hours) && shop.details.hours.length > 0) {
+          const popupHours = document.createElement("p");
+          popupHours.className = "coffee-map-popup__schedule";
+          popupHours.textContent = formatHoursSummary(shop.details.hours);
+          popupDetails.append(popupHours);
+        }
+
+        const amenities = getVisibleAmenities(shop);
+        const popupAmenities = document.createElement("div");
+        popupAmenities.className = "coffee-map-popup__amenities";
+
+        amenities.forEach((amenity) => {
+          const chip = createAmenityChip(amenity);
+          if (chip) {
+            popupAmenities.append(chip);
+          }
+        });
+
+        if (amenities.length > 0) {
+          popupHeader.append(popupAmenities);
+        }
+
+        if (popupDetails.childElementCount > 0) {
+          popupBody.append(popupDetails);
+        }
+        popupContent.append(popupBody);
+
+        const popupLinks = [];
+
+        if (shop.website) {
+          const popupWebsite = document.createElement("a");
+          popupWebsite.className = "coffee-map-popup__text-link";
+          popupWebsite.href = shop.website;
+          popupWebsite.target = "_blank";
+          popupWebsite.rel = "noreferrer";
+          popupWebsite.textContent = "Website";
+          popupLinks.push(popupWebsite);
+        }
+
+        if (shop.address) {
+          const popupAddress = document.createElement(shop.addressUrl ? "a" : "span");
+          popupAddress.className = shop.addressUrl
+            ? "coffee-map-popup__address coffee-map-popup__text-link"
+            : "coffee-map-popup__address";
+
+          if (popupAddress instanceof HTMLAnchorElement) {
+            popupAddress.href = shop.addressUrl;
+            popupAddress.target = "_blank";
+            popupAddress.rel = "noreferrer";
+          }
+
+          popupAddress.textContent = shop.address;
+          popupLinks.push(popupAddress);
+        }
+
+        if (popupLinks.length > 0) {
+          const popupLinksRow = document.createElement("div");
+          popupLinksRow.className = "coffee-map-popup__links";
+
+          const leftLink = popupLinks.find((link) => link.textContent === "Website");
+          const rightLink = popupLinks.find((link) => link.textContent !== "Website");
+
+          if (leftLink) {
+            popupLinksRow.append(leftLink);
+          } else {
+            const spacer = document.createElement("span");
+            spacer.className = "coffee-map-popup__spacer";
+            popupLinksRow.append(spacer);
+          }
+
+          if (rightLink) {
+            popupLinksRow.append(rightLink);
+          }
+
+          popupContent.append(popupLinksRow);
         }
 
         return popupContent;
@@ -469,19 +713,30 @@ const mapId = "favorite-coffee-map";
         }
       };
 
+      const createMarkerElement = (shop) => {
+        const markerElement = document.createElement("button");
+        markerElement.type = "button";
+        markerElement.className = "coffee-marker";
+        markerElement.setAttribute("aria-label", shop.name);
+        markerElement.style.setProperty("--marker-accent", shop.accent);
+
+        const halo = document.createElement("span");
+        halo.className = "coffee-marker__halo";
+
+        const core = document.createElement("span");
+        core.className = "coffee-marker__core";
+        appendShopIdentity(core, shop, "coffee-marker__logo");
+
+        markerElement.classList.add("has-logo");
+        core.classList.add("has-logo");
+
+        markerElement.append(halo, core);
+        return markerElement;
+      };
+
       const addMarkers = () => {
         for (const shop of shops) {
-          const markerElement = document.createElement("button");
-          markerElement.type = "button";
-          markerElement.className = "coffee-marker";
-          markerElement.setAttribute("aria-label", shop.name);
-          markerElement.style.setProperty("--marker-accent", shop.accent);
-          markerElement.innerHTML = `
-            <span class="coffee-marker__halo"></span>
-            <span class="coffee-marker__core">
-              <span class="coffee-marker__label">${shop.monogram}</span>
-            </span>
-          `;
+          const markerElement = createMarkerElement(shop);
 
           const marker = L.marker([shop.coordinates[1], shop.coordinates[0]], {
             title: shop.name,
@@ -782,16 +1037,7 @@ const mapId = "favorite-coffee-map";
   }
 
   .coffee-map-sidebar__header {
-    padding: 0.15rem 0.15rem 0 0.15rem;
-  }
-
-  .coffee-map-sidebar__eyebrow {
-    margin: 0 0 0.45rem;
-    color: #666;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    padding: 0.5rem 0.15rem 0.2rem;
   }
 
   .coffee-map-sidebar__header h2 {
@@ -856,6 +1102,7 @@ const mapId = "favorite-coffee-map";
     border-radius: 999px;
     background: var(--shop-accent);
     color: white;
+    overflow: hidden;
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -863,6 +1110,16 @@ const mapId = "favorite-coffee-map";
     box-shadow:
       0 10px 24px color-mix(in srgb, var(--shop-accent) 20%, transparent),
       0 0 0 2px rgba(255, 255, 255, 0.94);
+  }
+
+  .coffee-shop-item__badge.has-logo {
+    background: #fff;
+  }
+
+  .coffee-shop-item__badge-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .coffee-shop-item__text {
@@ -876,10 +1133,56 @@ const mapId = "favorite-coffee-map";
     font-weight: 700;
   }
 
-  .coffee-shop-item__description {
+  .coffee-shop-item__meta,
+  .coffee-shop-item__address {
     color: #666;
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     line-height: 1.45;
+  }
+
+  .coffee-shop-item__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.12rem;
+  }
+
+  .coffee-shop-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.65rem;
+    min-width: 1.65rem;
+    padding: 0.2rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #555;
+    line-height: 1;
+  }
+
+  .coffee-shop-chip__icon {
+    display: inline-flex;
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .coffee-shop-chip__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .coffee-marker {
@@ -921,16 +1224,23 @@ const mapId = "favorite-coffee-map";
     place-items: center;
     background: var(--marker-accent);
     color: #fffaf5;
+    overflow: hidden;
     box-shadow:
       0 10px 20px rgba(0, 0, 0, 0.14),
       0 0 0 2px rgba(255, 255, 255, 0.96);
   }
 
-  .coffee-marker__label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+  .coffee-marker.has-logo .coffee-marker__core {
+    background: #fff;
+  }
+
+  .coffee-marker__logo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .coffee-marker.is-active .coffee-marker__halo,
@@ -972,7 +1282,8 @@ const mapId = "favorite-coffee-map";
 
   .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content {
     margin: 0;
-    min-width: 16rem;
+    min-width: 20.5rem;
+    max-width: 23rem;
   }
 
   .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-tip-container {
@@ -987,21 +1298,138 @@ const mapId = "favorite-coffee-map";
   }
 
   .coffee-map-popup__content {
-    padding: 0.95rem 1rem 1rem;
+    display: grid;
+    gap: 0.42rem;
+    padding: 0.96rem 1.05rem;
+  }
+
+  .coffee-map-popup__body {
+    display: grid;
+    gap: 0.32rem;
+    align-items: start;
+  }
+
+  .coffee-map-popup__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.62rem;
+    align-items: center;
+  }
+
+  .coffee-map-popup__heading {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .coffee-map-popup__title-row {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
   }
 
   .coffee-map-popup__content h3 {
     margin: 0;
     color: #333;
-    font-size: 1.05rem;
-    line-height: 1.2;
+    font-size: 0.93rem;
+    line-height: 1.05;
   }
 
-  .coffee-map-popup__content p:last-child {
-    margin: 0.45rem 0 0;
+  .coffee-map-section .coffee-map-popup__neighborhood,
+  .coffee-map-section .coffee-map-popup__schedule {
+    margin: 0;
     color: #666;
-    font-size: 0.88rem;
-    line-height: 1.5;
+    font-size: 0.72rem;
+    line-height: 1.08;
+  }
+
+  .coffee-map-section .coffee-map-popup__neighborhood {
+    margin-top: 0.20rem;
+    margin-bottom: 0;
+    line-height: 1;
+  }
+
+  .coffee-map-popup__details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.65rem;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .coffee-map-popup__description {
+    margin: 0;
+    color: #555;
+    font-size: 0.74rem;
+    line-height: 1.14;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .coffee-map-popup__schedule {
+    max-width: 8.2rem;
+    text-align: right;
+    text-wrap: balance;
+  }
+
+  .coffee-map-popup__address {
+    margin: 0;
+    color: #666;
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+
+  .coffee-map-popup__text-link {
+    color: #4d5560;
+    font-size: 0.74rem;
+    line-height: 1.25;
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+
+  .coffee-map-popup__links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .coffee-map-popup__amenities {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    max-width: none;
+    padding-top: 0;
+  }
+
+  .coffee-map-popup__text-link:hover,
+  .coffee-map-popup__text-link:focus-visible {
+    color: #222;
+  }
+
+  .coffee-map-popup__links > :first-child {
+    justify-self: start;
+  }
+
+  .coffee-map-popup__links > :last-child {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .coffee-map-popup__spacer {
+    display: block;
+  }
+
+  @media (max-width: 720px) {
+    .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content {
+      min-width: 18rem;
+      max-width: 19.5rem;
+    }
   }
 
   .coffee-map-section .leaflet-bottom.leaflet-right,

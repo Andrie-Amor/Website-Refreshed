@@ -2,166 +2,35 @@
   "sanFrancisco": {
     "id": "san-francisco",
     "label": "San Francisco, California",
-    "center": [-122.433, 37.764],
+    "center": [
+      -122.433,
+      37.764
+    ],
     "shops": [
       {
-        "id": "saint-frank",
-        "name": "Saint Frank Coffee",
-        "monogram": "SF",
-        "coordinates": [-122.423, 37.7974],
-        "description": "Bright, polished Russian Hill cafe with expressive espresso and a calm, design-forward room.",
-        "accent": "#b77b5c",
-        "logoPath": null,
-        "website": "https://www.saintfrankcoffee.com",
-        "neighborhood": "Russian Hill",
-        "address": "2340 Polk St, San Francisco, CA",
-        "details": {
-          "wifi": "good",
-          "sockets": "some",
-          "seating": "comfortable",
-          "hours": "Daily 7 AM - 6 PM",
-          "food": "Pastries",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "four-barrel",
-        "name": "Four Barrel Coffee",
-        "monogram": "FB",
-        "coordinates": [-122.4215, 37.767],
-        "description": "Mission mainstay for deeper roasts, strong music curation, and a warehouse-scale coffee bar.",
+        "id": "capital-one-cafe",
+        "name": "Capital One Cafe",
+        "coordinates": [
+          -122.403832,
+          37.78877
+        ],
+        "description": "Capital One!",
         "accent": "#8b6f60",
-        "logoPath": null,
-        "website": "https://www.fourbarrelcoffee.com",
-        "neighborhood": "Mission",
-        "address": "375 Valencia St, San Francisco, CA",
+        "logoPath": "/images/coffee-logos/capital-one-cafe.jpg",
+        "website": "https://www.capitalone.com/local/sanfrancisco-unionsquare/",
+        "neighborhood": "Union Square",
+        "address": "101 Post St",
+        "addressUrl": "https://maps.app.goo.gl/UUVY5CixnATuAtyX9",
         "details": {
-          "wifi": "okay",
-          "sockets": "few",
-          "seating": "plenty",
-          "hours": "Daily 7 AM - 5 PM",
-          "food": "Pastries",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "sightglass",
-        "name": "Sightglass Coffee",
-        "monogram": "SG",
-        "coordinates": [-122.4089, 37.7769],
-        "description": "Airy SoMa flagship with multi-level seating and a roasting setup that makes the whole space feel alive.",
-        "accent": "#6e7f72",
-        "logoPath": null,
-        "website": "https://sightglasscoffee.com",
-        "neighborhood": "SoMa",
-        "address": "270 7th St, San Francisco, CA",
-        "details": {
-          "wifi": "good",
-          "sockets": "some",
-          "seating": "plenty",
-          "hours": "Daily 7 AM - 7 PM",
-          "food": "Pastries",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "andytown",
-        "name": "Andytown Coffee Roasters",
-        "monogram": "AT",
-        "coordinates": [-122.4968, 37.7532],
-        "description": "Outer Sunset favorite with a neighborhood feel, surf energy, and an easy post-beach stop.",
-        "accent": "#5f7d8c",
-        "logoPath": null,
-        "website": "https://www.andytownsf.com",
-        "neighborhood": "Outer Sunset",
-        "address": "3655 Lawton St, San Francisco, CA",
-        "details": {
-          "wifi": "good",
-          "sockets": "few",
-          "seating": "limited",
-          "hours": "Daily 7 AM - 5 PM",
-          "food": "Scones",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "ritual",
-        "name": "Ritual Coffee Roasters",
-        "monogram": "RC",
-        "coordinates": [-122.4248, 37.7769],
-        "description": "Reliable Hayes Valley stop for clean pour-overs and a quick downtown detour without feeling rushed.",
-        "accent": "#927b63",
-        "logoPath": null,
-        "website": "https://ritualcoffee.com",
-        "neighborhood": "Hayes Valley",
-        "address": "432B Octavia St, San Francisco, CA",
-        "details": {
-          "wifi": "okay",
-          "sockets": "few",
-          "seating": "comfortable",
-          "hours": "Daily 7 AM - 6 PM",
-          "food": "Pastries",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "the-mill",
-        "name": "The Mill",
-        "monogram": "TM",
-        "coordinates": [-122.4376, 37.7763],
-        "description": "Minimal NOPA bakery-cafe pairing excellent coffee with thick toast and a slower morning tempo.",
-        "accent": "#b08f68",
-        "logoPath": null,
-        "website": "https://www.themillsf.com",
-        "neighborhood": "NOPA",
-        "address": "736 Divisadero St, San Francisco, CA",
-        "details": {
-          "wifi": "good",
-          "sockets": "few",
-          "seating": "comfortable",
-          "hours": "Daily 7 AM - 6 PM",
-          "food": "Toast and bakery",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "linea",
-        "name": "Linea Caffe",
-        "monogram": "LC",
-        "coordinates": [-122.414, 37.753],
-        "description": "Compact Mission bar with serious espresso, warm light, and just enough outdoor seating to linger.",
-        "accent": "#8f7569",
-        "logoPath": null,
-        "website": "https://lineacaffe.com",
-        "neighborhood": "Mission",
-        "address": "3417 18th St, San Francisco, CA",
-        "details": {
-          "wifi": "none",
-          "sockets": "few",
-          "seating": "limited",
-          "hours": "Daily 7 AM - 4 PM",
-          "food": "Pastries",
-          "notes": "Fake seed data for the local admin workflow."
-        }
-      },
-      {
-        "id": "coffee-movement",
-        "name": "The Coffee Movement",
-        "monogram": "CM",
-        "coordinates": [-122.4083, 37.7954],
-        "description": "Tiny downtown shop with meticulous drinks and a sharply edited menu that feels product-level precise.",
-        "accent": "#6f8574",
-        "logoPath": null,
-        "website": "https://thecoffeemovement.com",
-        "neighborhood": "Nob Hill",
-        "address": "1030 Washington St, San Francisco, CA",
-        "details": {
-          "wifi": "none",
-          "sockets": "none",
-          "seating": "limited",
-          "hours": "Daily 8 AM - 4 PM",
-          "food": "Minimal pastry selection",
-          "notes": "Fake seed data for the local admin workflow."
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+              "label": "9 AM - 5 PM"
+            }
+          ]
         }
       }
     ]
