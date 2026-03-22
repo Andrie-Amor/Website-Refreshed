@@ -14,6 +14,8 @@ const LOGO_PUBLIC_PREFIX = "/images/coffee-logos/";
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.COFFEE_ADMIN_PORT || 4322);
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
+const SERVER_STARTED_AT = new Date().toISOString();
+const IS_WATCH_MODE = process.env.COFFEE_ADMIN_WATCH === "1";
 
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -60,6 +62,16 @@ function optionalString(value) {
   return normalized ? normalized : undefined;
 }
 
+function monogramFromName(name) {
+  const words = compactString(name)
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) return "";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 function normalizeAccent(value) {
   const normalized = compactString(value);
   if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized)) {
@@ -85,7 +97,6 @@ function normalizeDetails(rawDetails) {
     seating: optionalString(rawDetails?.seating),
     hours: optionalString(rawDetails?.hours),
     food: optionalString(rawDetails?.food),
-    notes: optionalString(rawDetails?.notes),
   };
 
   return Object.fromEntries(
@@ -104,7 +115,9 @@ function ensureShopPayload(rawShop) {
     throw new Error("A valid id could not be generated.");
   }
 
-  const monogram = compactString(rawShop?.monogram).slice(0, 4).toUpperCase();
+  const monogram =
+    compactString(rawShop?.monogram).slice(0, 4).toUpperCase() ||
+    monogramFromName(name);
   if (!monogram) {
     throw new Error("Monogram is required.");
   }
@@ -259,6 +272,8 @@ async function handleSaveShop(request, response) {
   const cityKey = compactString(body.cityKey);
   const previousShopId = compactString(body.previousShopId);
   const removeLogo = Boolean(body.removeLogo);
+  const hasAccentOverride = Boolean(compactString(body.shop?.accent));
+  const hasMonogramOverride = Boolean(compactString(body.shop?.monogram));
   const normalizedShop = ensureShopPayload(body.shop);
   const data = await readDataFile();
   const city = data[cityKey];
@@ -286,6 +301,12 @@ async function handleSaveShop(request, response) {
 
   const nextShop = {
     ...normalizedShop,
+    accent: hasAccentOverride
+      ? normalizedShop.accent
+      : existingShop?.accent ?? normalizedShop.accent,
+    monogram: hasMonogramOverride
+      ? normalizedShop.monogram
+      : existingShop?.monogram ?? normalizedShop.monogram,
     logoPath: nextLogoPath,
   };
 
@@ -569,6 +590,24 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         grid-column: span 2;
       }
 
+      .toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      .toggle-chip {
+        padding: 0.7rem 0.95rem;
+        border-radius: 999px;
+        font-size: 0.92rem;
+      }
+
+      .toggle-chip.is-active {
+        background: #111111;
+        border-color: #111111;
+        color: #ffffff;
+      }
+
       label {
         font-size: 0.84rem;
         font-weight: 700;
@@ -733,10 +772,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                   <label for="city-key">City</label>
                   <select id="city-key" name="cityKey"></select>
                 </div>
-                <div class="field-group">
-                  <label for="accent">Accent Color</label>
-                  <input id="accent" name="accent" type="text" placeholder="#8b6f60" />
-                </div>
 
                 <div class="field-group">
                   <label for="name">Name</label>
@@ -747,10 +782,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                   <input id="id" name="id" type="text" required />
                 </div>
 
-                <div class="field-group">
-                  <label for="monogram">Monogram</label>
-                  <input id="monogram" name="monogram" type="text" maxlength="4" required />
-                </div>
                 <div class="field-group">
                   <label for="website">Website</label>
                   <input id="website" name="website" type="url" placeholder="https://..." />
@@ -788,45 +819,19 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                   <input id="food" name="food" type="text" placeholder="Pastries, sandwiches, toast..." />
                 </div>
 
-                <div class="field-group">
-                  <label for="wifi">Wifi</label>
-                  <select id="wifi" name="wifi">
-                    <option value="">Unknown</option>
-                    <option value="none">None</option>
-                    <option value="okay">Okay</option>
-                    <option value="good">Good</option>
-                    <option value="great">Great</option>
-                  </select>
-                </div>
-                <div class="field-group">
-                  <label for="sockets">Sockets</label>
-                  <select id="sockets" name="sockets">
-                    <option value="">Unknown</option>
-                    <option value="none">None</option>
-                    <option value="few">Few</option>
-                    <option value="some">Some</option>
-                    <option value="many">Many</option>
-                  </select>
-                </div>
-
-                <div class="field-group">
-                  <label for="seating">Seating</label>
-                  <select id="seating" name="seating">
-                    <option value="">Unknown</option>
-                    <option value="standing">Standing room</option>
-                    <option value="limited">Limited</option>
-                    <option value="comfortable">Comfortable</option>
-                    <option value="plenty">Plenty</option>
-                  </select>
+                <div class="field-group col-span-2">
+                  <div class="toggle-row" role="group" aria-label="Amenities">
+                    <button type="button" class="toggle-chip" data-detail-toggle="wifi" aria-pressed="false">Wifi</button>
+                    <button type="button" class="toggle-chip" data-detail-toggle="sockets" aria-pressed="false">Sockets</button>
+                    <button type="button" class="toggle-chip" data-detail-toggle="seating" aria-pressed="false">Seating</button>
+                  </div>
+                  <input id="wifi" name="wifi" type="hidden" />
+                  <input id="sockets" name="sockets" type="hidden" />
+                  <input id="seating" name="seating" type="hidden" />
                 </div>
                 <div class="field-group">
                   <label for="logo-file">Logo Image</label>
                   <input id="logo-file" name="logoFile" type="file" accept="image/*" />
-                </div>
-
-                <div class="field-group col-span-2">
-                  <label for="notes">Notes</label>
-                  <textarea id="notes" name="notes" placeholder="Anything you want to remember while curating the list."></textarea>
                 </div>
 
                 <div class="field-group col-span-2">
@@ -882,7 +887,9 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       const removeLogoInput = document.getElementById("remove-logo");
       const nameInput = document.getElementById("name");
       const idInput = document.getElementById("id");
-      const monogramInput = document.getElementById("monogram");
+      const detailToggleButtons = Array.from(document.querySelectorAll("[data-detail-toggle]"));
+      const ACTIVE_DETAIL_VALUE = "available";
+      let serverStartedAt = ${JSON.stringify(SERVER_STARTED_AT)};
 
       function slugify(value) {
         return String(value || "")
@@ -892,17 +899,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-+|-+$/g, "")
           .replace(/-{2,}/g, "-");
-      }
-
-      function monogramFromName(name) {
-        const words = String(name || "")
-          .trim()
-          .split(/\\s+/)
-          .filter(Boolean);
-
-        if (words.length === 0) return "";
-        if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-        return (words[0][0] + words[1][0]).toUpperCase();
       }
 
       function getCity() {
@@ -970,10 +966,8 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         return {
           id: "",
           name: "",
-          monogram: "",
           coordinates: city?.center ? [city.center[0], city.center[1]] : [-122.433, 37.764],
           description: "",
-          accent: "#8b6f60",
           logoPath: null,
           website: "",
           neighborhood: "",
@@ -984,9 +978,18 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             seating: "",
             hours: "",
             food: "",
-            notes: "",
           },
         };
+      }
+
+      function syncDetailToggleButtons() {
+        detailToggleButtons.forEach((button) => {
+          const key = button.dataset.detailToggle;
+          const input = key ? document.getElementById(key) : null;
+          const isActive = Boolean(input?.value);
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        });
       }
 
       function fillCityOptions() {
@@ -1009,8 +1012,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       function fillForm(shop) {
         document.getElementById("name").value = shop.name || "";
         document.getElementById("id").value = shop.id || "";
-        document.getElementById("monogram").value = shop.monogram || "";
-        document.getElementById("accent").value = shop.accent || "#8b6f60";
         document.getElementById("longitude").value = shop.coordinates?.[0] ?? "";
         document.getElementById("latitude").value = shop.coordinates?.[1] ?? "";
         document.getElementById("website").value = shop.website || "";
@@ -1022,7 +1023,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         document.getElementById("wifi").value = shop.details?.wifi || "";
         document.getElementById("sockets").value = shop.details?.sockets || "";
         document.getElementById("seating").value = shop.details?.seating || "";
-        document.getElementById("notes").value = shop.details?.notes || "";
+        syncDetailToggleButtons();
         logoFileInput.value = "";
         removeLogoInput.checked = false;
         updateLogoPreview();
@@ -1112,8 +1113,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           shop: {
             id: document.getElementById("id").value,
             name: document.getElementById("name").value,
-            monogram: document.getElementById("monogram").value,
-            accent: document.getElementById("accent").value,
             coordinates: [
               Number(document.getElementById("longitude").value),
               Number(document.getElementById("latitude").value),
@@ -1128,10 +1127,28 @@ const ADMIN_PAGE_HTML = `<!doctype html>
               wifi: document.getElementById("wifi").value,
               sockets: document.getElementById("sockets").value,
               seating: document.getElementById("seating").value,
-              notes: document.getElementById("notes").value,
             },
           },
         };
+      }
+
+      async function checkForAdminUpdates() {
+        try {
+          const response = await fetch("/api/admin-meta", { cache: "no-store" });
+          if (!response.ok) return;
+
+          const payload = await response.json();
+          if (!payload?.ok || !payload.serverStartedAt) return;
+
+          if (payload.serverStartedAt !== serverStartedAt) {
+            window.location.reload();
+            return;
+          }
+
+          serverStartedAt = payload.serverStartedAt;
+        } catch (error) {
+          // Ignore transient failures while the watch process is restarting.
+        }
       }
 
       formElement.addEventListener("submit", async (event) => {
@@ -1227,14 +1244,21 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       logoFileInput.addEventListener("change", updateLogoPreview);
       removeLogoInput.addEventListener("change", updateLogoPreview);
 
+      detailToggleButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const key = button.dataset.detailToggle;
+          const input = key ? document.getElementById(key) : null;
+          if (!input) return;
+
+          input.value = input.value ? "" : ACTIVE_DETAIL_VALUE;
+          syncDetailToggleButtons();
+        });
+      });
+
       nameInput.addEventListener("input", () => {
         if (!idInput.dataset.locked || !idInput.value) {
           idInput.value = slugify(nameInput.value);
           idInput.dataset.locked = "";
-        }
-
-        if (!monogramInput.value) {
-          monogramInput.value = monogramFromName(nameInput.value);
         }
       });
 
@@ -1245,6 +1269,8 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       loadData().catch((error) => {
         setStatus(error.message || "Could not load the local admin tool.", "error");
       });
+
+      window.setInterval(checkForAdminUpdates, 1000);
     </script>
   </body>
 </html>`;
@@ -1269,6 +1295,15 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && requestUrl.pathname === "/api/cities") {
       const data = await readDataFile();
       sendJson(response, 200, { ok: true, data });
+      return;
+    }
+
+    if (request.method === "GET" && requestUrl.pathname === "/api/admin-meta") {
+      sendJson(response, 200, {
+        ok: true,
+        serverStartedAt: SERVER_STARTED_AT,
+        watchMode: IS_WATCH_MODE,
+      });
       return;
     }
 

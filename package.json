@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "coffee-admin": "node scripts/coffee-admin-server.mjs",
+    "coffee-admin": "COFFEE_ADMIN_WATCH=1 node --watch scripts/coffee-admin-server.mjs",
+    "coffee-admin:once": "node scripts/coffee-admin-server.mjs",
     "astro": "astro"
   },
   "dependencies": {
