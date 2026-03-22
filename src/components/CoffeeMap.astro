@@ -27,12 +27,12 @@ const amenityDefinitions = {
   sockets: {
     label: "Sockets",
     icon:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3.8v3.2M16 3.8v3.2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M7.2 7h9.6a1.8 1.8 0 0 1 1.8 1.8v3.8a6.6 6.6 0 0 1-6.6 6.6h0a6.6 6.6 0 0 1-6.6-6.6V8.8A1.8 1.8 0 0 1 7.2 7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 19.2V21" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.8v4.1M14 4.8v4.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M8.3 8.9h7.4v3.2a3.7 3.7 0 0 1-7.4 0V8.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 15.8v1.8a2.9 2.9 0 0 1-2.9 2.9H7.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
   },
   seating: {
     label: "Seating",
     icon:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 12.2V8.3a1.8 1.8 0 1 1 3.6 0v3.9M13.2 12.2V9.4a1.8 1.8 0 1 1 3.6 0v2.8M5.8 12.2h12.4v3.2H5.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 15.4V19.6M17 15.4V19.6M4.8 19.6h14.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.1 6.2h7.8v5.2H8.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.2 11.4h11.6v3.5H6.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 14.9V19M16 14.9V19M5.2 19h13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   },
 } as const;
 
@@ -59,11 +59,8 @@ const formatDayRange = (days: string[]) => {
 const formatHoursEntry = (entry: CoffeeShopHoursEntry) =>
   `${formatDayRange(entry.days)} ${entry.label}`;
 
-const formatHoursSummary = (hours?: CoffeeShopHoursEntry[]) =>
-  hours?.map(formatHoursEntry).join(" · ") ?? "";
-
 const getSidebarMeta = (shop: CoffeeShop) =>
-  [shop.neighborhood, formatHoursSummary(shop.details?.hours)].filter(Boolean).join(" • ");
+  [shop.neighborhood].filter(Boolean).join(" • ");
 
 const getVisibleAmenities = (shop: CoffeeShop) =>
   (Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>).filter(
@@ -120,29 +117,33 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
                 />
               </span>
               <span class="coffee-shop-item__text">
-                <span class="coffee-shop-item__name">{shop.name}</span>
-                {getSidebarMeta(shop) && (
-                  <span class="coffee-shop-item__meta">{getSidebarMeta(shop)}</span>
-                )}
+                <span class="coffee-shop-item__top">
+                  <span class="coffee-shop-item__identity">
+                    <span class="coffee-shop-item__name">{shop.name}</span>
+                    {getSidebarMeta(shop) && (
+                      <span class="coffee-shop-item__meta">{getSidebarMeta(shop)}</span>
+                    )}
+                  </span>
+                  {getVisibleAmenities(shop).length > 0 && (
+                    <span class="coffee-shop-item__chips">
+                      {getVisibleAmenities(shop).map((amenity) => (
+                        <span
+                          class="coffee-shop-chip"
+                          aria-label={amenityDefinitions[amenity].label}
+                          title={amenityDefinitions[amenity].label}
+                        >
+                          <span
+                            class="coffee-shop-chip__icon"
+                            set:html={amenityDefinitions[amenity].icon}
+                          />
+                          <span class="sr-only">{amenityDefinitions[amenity].label}</span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </span>
                 {shop.address && (
                   <span class="coffee-shop-item__address">{shop.address}</span>
-                )}
-                {getVisibleAmenities(shop).length > 0 && (
-                  <span class="coffee-shop-item__chips">
-                    {getVisibleAmenities(shop).map((amenity) => (
-                      <span
-                        class="coffee-shop-chip"
-                        aria-label={amenityDefinitions[amenity].label}
-                        title={amenityDefinitions[amenity].label}
-                      >
-                        <span
-                          class="coffee-shop-chip__icon"
-                          set:html={amenityDefinitions[amenity].icon}
-                        />
-                        <span class="sr-only">{amenityDefinitions[amenity].label}</span>
-                      </span>
-                    ))}
-                  </span>
                 )}
               </span>
             </button>
@@ -472,10 +473,12 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         return indexes.map((index) => DAY_ORDER[index]).join(", ");
       };
 
-      const formatHoursSummary = (hours) =>
+      const formatHoursEntries = (hours) =>
         Array.isArray(hours)
-          ? hours.map((entry) => formatDayRange(entry.days || []) + " " + (entry.label || "")).join(" · ")
-          : "";
+          ? hours
+              .map((entry) => formatDayRange(entry.days || []) + " " + (entry.label || ""))
+              .filter((entry) => entry.trim())
+          : [];
 
       const appendShopIdentity = (container, shop, imageClassName) => {
         const image = document.createElement("img");
@@ -553,9 +556,16 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         }
 
         if (Array.isArray(shop.details?.hours) && shop.details.hours.length > 0) {
-          const popupHours = document.createElement("p");
+          const popupHours = document.createElement("div");
           popupHours.className = "coffee-map-popup__schedule";
-          popupHours.textContent = formatHoursSummary(shop.details.hours);
+
+          formatHoursEntries(shop.details.hours).forEach((entry) => {
+            const popupHoursLine = document.createElement("p");
+            popupHoursLine.className = "coffee-map-popup__schedule-line";
+            popupHoursLine.textContent = entry;
+            popupHours.append(popupHoursLine);
+          });
+
           popupDetails.append(popupHours);
         }
 
@@ -1133,6 +1143,19 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     gap: 0.28rem;
   }
 
+  .coffee-shop-item__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: start;
+  }
+
+  .coffee-shop-item__identity {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+
   .coffee-shop-item__name {
     color: #333;
     font-size: 0.98rem;
@@ -1148,18 +1171,20 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
   .coffee-shop-item__chips {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.35rem;
-    margin-top: 0.12rem;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
   }
 
   .coffee-shop-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 1.65rem;
-    min-width: 1.65rem;
-    padding: 0.2rem;
+    min-height: 1.72rem;
+    min-width: 1.72rem;
+    padding: 0.14rem;
     border: 1px solid rgba(229, 229, 229, 0.96);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.88);
@@ -1169,8 +1194,8 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
   .coffee-shop-chip__icon {
     display: inline-flex;
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 1.08rem;
+    height: 1.08rem;
   }
 
   .coffee-shop-chip__icon :global(svg) {
@@ -1342,7 +1367,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   }
 
   .coffee-map-section .coffee-map-popup__neighborhood,
-  .coffee-map-section .coffee-map-popup__schedule {
+  .coffee-map-section .coffee-map-popup__schedule-line {
     margin: 0;
     color: #666;
     font-size: 0.72rem;
@@ -1359,7 +1384,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.65rem;
-    align-items: center;
+    align-items: start;
     min-width: 0;
   }
 
@@ -1375,9 +1400,16 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   }
 
   .coffee-map-popup__schedule {
+    display: grid;
+    gap: 0.1rem;
+    align-self: center;
     max-width: 8.2rem;
     text-align: right;
-    text-wrap: balance;
+    align-content: start;
+  }
+
+  .coffee-map-section .coffee-map-popup__schedule-line {
+    margin: 0;
   }
 
   .coffee-map-popup__address {

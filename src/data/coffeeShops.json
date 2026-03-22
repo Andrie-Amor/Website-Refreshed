@@ -27,8 +27,60 @@
           "seating": true,
           "hours": [
             {
-              "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+              "days": [
+                "Sun"
+              ],
               "label": "9 AM - 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM - 6 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "9 AM - 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "corgi-cafe",
+        "name": "Corgi Cafe",
+        "coordinates": [
+          -122.404462,
+          37.790525
+        ],
+        "description": "24/7 cafe",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/corgi-cafe.png",
+        "website": "https://thecorgi.cafe/",
+        "neighborhood": "Financial District",
+        "address": "9 Claude Ln",
+        "addressUrl": "https://maps.app.goo.gl/qHt7sP8mG1h4HtVZ8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "12 AM - 12 AM"
             }
           ]
         }
