@@ -63,6 +63,17 @@ function optionalString(value) {
   return normalized ? normalized : undefined;
 }
 
+function optionalMultilineString(value) {
+  const normalized = String(value ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim().replace(/\s+/g, " "))
+    .join("\n")
+    .trim();
+
+  return normalized ? normalized : undefined;
+}
+
 function normalizeAccent(value) {
   const normalized = compactString(value);
   if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized)) {
@@ -159,7 +170,7 @@ function ensureShopPayload(rawShop) {
     id,
     name,
     coordinates: [longitude, latitude],
-    description: optionalString(rawShop?.description),
+    description: optionalMultilineString(rawShop?.description),
     accent: normalizeAccent(rawShop?.accent),
     logoPath:
       typeof rawShop?.logoPath === "string" && rawShop.logoPath.startsWith("/")
@@ -1065,7 +1076,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
       function buildHoursSchedule() {
         const dailyLabels = DAY_ORDER.map((day) => {
           const input = document.getElementById(hoursInputIds[day]);
-          return String(input?.value || "").trim().replace(/\s+/g, " ");
+          return String(input?.value || "").trim().replace(/\\s+/g, " ");
         });
 
         const entries = [];
