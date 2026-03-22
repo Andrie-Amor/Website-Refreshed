@@ -45,15 +45,14 @@ const mapId = "favorite-coffee-map";
       aria-label="Coffee shop list"
     >
       <div class="coffee-map-sidebar__header">
-        <p class="coffee-map-sidebar__eyebrow">{cityLabel}</p>
         <h2 id="coffee-map-title">{title}</h2>
       </div>
 
       <div class="coffee-map-sidebar__list" data-shop-list>
         {
-          shops.map((shop, index) => (
+          shops.map((shop) => (
             <button
-              class={`coffee-shop-item ${index === 0 ? "is-active" : ""}`}
+              class="coffee-shop-item"
               type="button"
               data-shop-item
               data-shop-id={shop.id}
@@ -154,9 +153,13 @@ const mapId = "favorite-coffee-map";
         Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
       const PINCH_ZOOM_STEP = 1;
       const PINCH_THRESHOLD = 80;
+      const TRACKPAD_WHEEL_THRESHOLD = 36;
       let pinchDelta = 0;
       let pinchResetTimer = null;
       let pinchGestureConsumed = false;
+      let trackpadWheelDelta = 0;
+      let trackpadWheelResetTimer = null;
+      let trackpadWheelGestureConsumed = false;
       let queuedZoomSteps = 0;
       let queuedZoomPoint = null;
       let isQueuedZoomActive = false;
@@ -191,18 +194,35 @@ const mapId = "favorite-coffee-map";
         }
       });
 
-      const handleTrackpadPinchZoom = (event) => {
-        // Trackpad pinch gestures surface as ctrl+wheel on desktop browsers.
-        if (!event.ctrlKey) return;
-
-        event.preventDefault();
-
+      const getWheelPoint = (event) => {
         const rect = mapContainer.getBoundingClientRect();
-        const zoomDelta = -event.deltaY * 0.01;
-        const containerPoint = L.point(
+        return L.point(
           event.clientX - rect.left,
           event.clientY - rect.top,
         );
+      };
+
+      const queueZoomFromWheel = (steps, containerPoint) => {
+        if (steps === 0) return;
+
+        queuedZoomSteps = Math.sign(steps);
+        queuedZoomPoint = containerPoint;
+        processQueuedZoom();
+      };
+
+      const isTrackpadWheelGesture = (event) =>
+        event.deltaMode === WheelEvent.DOM_DELTA_PIXEL &&
+        Math.abs(event.deltaY) > 0 &&
+        Math.abs(event.deltaY) < 80 &&
+        Math.abs(event.deltaX) < 80;
+
+      const handleTrackpadPinchZoom = (event) => {
+        // Trackpad pinch gestures surface as ctrl+wheel on desktop browsers.
+        if (!event.ctrlKey) return false;
+
+        event.preventDefault();
+
+        const containerPoint = getWheelPoint(event);
         const nextDelta = pinchDelta - event.deltaY;
         const steps = Math.trunc(nextDelta / PINCH_THRESHOLD);
 
@@ -211,9 +231,7 @@ const mapId = "favorite-coffee-map";
         if (steps !== 0 && !pinchGestureConsumed) {
           pinchDelta -= steps * PINCH_THRESHOLD;
           pinchGestureConsumed = true;
-          queuedZoomSteps = Math.sign(steps);
-          queuedZoomPoint = containerPoint;
-          processQueuedZoom();
+          queueZoomFromWheel(steps, containerPoint);
         }
 
         window.clearTimeout(pinchResetTimer ?? undefined);
@@ -222,14 +240,53 @@ const mapId = "favorite-coffee-map";
           pinchGestureConsumed = false;
           pinchResetTimer = null;
         }, 140);
+
+        return true;
       };
 
-      mapContainer.addEventListener("wheel", handleTrackpadPinchZoom, {
+      const handleTrackpadWheelZoom = (event) => {
+        if (event.ctrlKey || !isTrackpadWheelGesture(event)) return false;
+
+        event.preventDefault();
+
+        const containerPoint = getWheelPoint(event);
+        const nextDelta = trackpadWheelDelta - event.deltaY;
+        const steps = Math.trunc(nextDelta / TRACKPAD_WHEEL_THRESHOLD);
+
+        trackpadWheelDelta = nextDelta;
+
+        if (steps !== 0 && !trackpadWheelGestureConsumed) {
+          trackpadWheelDelta -= steps * TRACKPAD_WHEEL_THRESHOLD;
+          trackpadWheelGestureConsumed = true;
+          queueZoomFromWheel(steps, containerPoint);
+        }
+
+        window.clearTimeout(trackpadWheelResetTimer ?? undefined);
+        trackpadWheelResetTimer = window.setTimeout(() => {
+          trackpadWheelDelta = 0;
+          trackpadWheelGestureConsumed = false;
+          trackpadWheelResetTimer = null;
+        }, 320);
+
+        return true;
+      };
+
+      const handleWheelZoom = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (handleTrackpadPinchZoom(event)) return;
+        handleTrackpadWheelZoom(event);
+      };
+
+      mapContainer.addEventListener("wheel", handleWheelZoom, {
+        capture: true,
         passive: false,
       });
 
       const markerElements = new Map();
       const markersById = new Map();
+      let activeShopId = null;
       const bounds =
         shops.length > 0
           ? L.latLngBounds(
@@ -262,6 +319,11 @@ const mapId = "favorite-coffee-map";
       };
       const showSidebar = () => {
         if (isCompact()) return;
+
+        if (isSidebarHidden()) {
+          currentSidebarWidth = Math.max(currentSidebarWidth, DEFAULT_SIDEBAR_WIDTH);
+        }
+
         root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
         syncSidebarWidth();
         syncSidebarVisibility();
@@ -346,8 +408,29 @@ const mapId = "favorite-coffee-map";
         });
       };
 
+      const clearActiveShop = () => {
+        activeShopId = null;
+
+        markerElements.forEach((markerElement) => {
+          markerElement.classList.remove("is-active");
+        });
+
+        for (const item of listItems) {
+          item.classList.remove("is-active");
+        }
+
+        if (map.hasLayer(activePopup)) {
+          map.removeLayer(activePopup);
+        }
+      };
+
       const setActiveShop = (shop, options = {}) => {
         const { revealSidebar = false, centerMap = false } = options;
+
+        if (activeShopId === shop.id) {
+          clearActiveShop();
+          return;
+        }
 
         if (revealSidebar) {
           showSidebar();
@@ -356,6 +439,8 @@ const mapId = "favorite-coffee-map";
         if (centerMap) {
           centerOnShop(shop);
         }
+
+        activeShopId = shop.id;
 
         markerElements.forEach((markerElement, shopId) => {
           markerElement.classList.toggle("is-active", shopId === shop.id);
@@ -530,15 +615,12 @@ const mapId = "favorite-coffee-map";
       window.addEventListener("pagehide", () => {
         resizeObserver.disconnect();
         window.clearTimeout(pinchResetTimer ?? undefined);
+        window.clearTimeout(trackpadWheelResetTimer ?? undefined);
         map.remove();
       });
 
       map.whenReady(() => {
         addMarkers();
-
-        if (shops[0]) {
-          setActiveShop(shops[0]);
-        }
 
         fitToMarkers(0);
         requestAnimationFrame(() => map.invalidateSize());
@@ -563,6 +645,7 @@ const mapId = "favorite-coffee-map";
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    overscroll-behavior: contain;
     border-top: 1px solid #e5e5e5;
     background: #fff;
   }
@@ -570,6 +653,7 @@ const mapId = "favorite-coffee-map";
   .coffee-map-canvas {
     position: absolute;
     inset: 0;
+    overscroll-behavior: contain;
   }
 
   .coffee-map-sidebar {
@@ -712,6 +796,7 @@ const mapId = "favorite-coffee-map";
 
   .coffee-map-sidebar__header h2 {
     margin: 0;
+    padding-block: 0.35rem;
     color: #333;
     font-size: clamp(1.65rem, 3vw, 2.2rem);
     line-height: 1;
@@ -863,10 +948,12 @@ const mapId = "favorite-coffee-map";
     width: 100%;
     height: 100%;
     background: #eef1f3;
+    overscroll-behavior: contain;
   }
 
   .coffee-map-section .leaflet-tile {
     outline: 1px solid transparent;
+    filter: saturate(1.16) contrast(1.03);
   }
 
   .coffee-map-section .coffee-marker-wrapper {
