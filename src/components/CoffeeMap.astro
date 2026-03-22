@@ -713,6 +713,12 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         }
       };
 
+      map.on("click", () => {
+        if (activeShopId) {
+          clearActiveShop();
+        }
+      });
+
       const createMarkerElement = (shop) => {
         const markerElement = document.createElement("button");
         markerElement.type = "button";
