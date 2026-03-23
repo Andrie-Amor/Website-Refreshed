@@ -108,6 +108,15 @@ const sortedShops = [...shops].sort((left, right) =>
       data-sidebar
       aria-label="Coffee shop list"
     >
+      <button
+        class="coffee-map-sidebar__sheet-handle"
+        type="button"
+        aria-label="Resize coffee shop list"
+        data-mobile-sheet-handle
+      >
+        <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"></span>
+      </button>
+
       <div class="coffee-map-sidebar__header">
         <h2 id="coffee-map-title">{title}</h2>
         <p class="coffee-map-sidebar__summary" data-filter-summary>
@@ -259,6 +268,7 @@ const sortedShops = [...shops].sort((left, right) =>
     const sidebar = root.querySelector("[data-sidebar]");
     const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
     const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
+    const mobileSheetHandle = root.querySelector("[data-mobile-sheet-handle]");
     const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
     const amenityFilterButtons = Array.from(
       root.querySelectorAll("[data-amenity-filter]"),
@@ -285,7 +295,11 @@ const sortedShops = [...shops].sort((left, right) =>
       const HIDE_SIDEBAR_THRESHOLD = 180;
       const INITIAL_VIEW_ZOOM = 13;
       const INITIAL_VIEW_MAX_ZOOM = 14;
+      const MOBILE_INITIAL_VIEW_MAX_ZOOM = 12;
+      const MOBILE_SHEET_MIN_HEIGHT = 86;
+      const MOBILE_SHEET_DEFAULT_HEIGHT = 128;
       let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
+      let currentMobileSheetHeight = MOBILE_SHEET_DEFAULT_HEIGHT;
 
       const map = L.map(mapContainer, {
         center: [center[1], center[0]],
@@ -468,6 +482,73 @@ const sortedShops = [...shops].sort((left, right) =>
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
       const isSidebarHidden = () =>
         root.classList.contains("is-sidebar-hidden");
+      const getMobileSheetMaxHeight = () => {
+        const frameHeight =
+          root.getBoundingClientRect().height || window.innerHeight;
+
+        return Math.max(
+          MOBILE_SHEET_MIN_HEIGHT,
+          Math.min(frameHeight - 24, Math.round(frameHeight * 0.82)),
+        );
+      };
+      const getMobileSheetMidHeight = () =>
+        Math.min(
+          getMobileSheetMaxHeight(),
+          Math.max(240, Math.round(getMobileSheetMaxHeight() * 0.5)),
+        );
+      const clampMobileSheetHeight = (height) =>
+        Math.min(
+          getMobileSheetMaxHeight(),
+          Math.max(MOBILE_SHEET_MIN_HEIGHT, height),
+        );
+      const syncMobileSheetHeight = () => {
+        currentMobileSheetHeight = clampMobileSheetHeight(
+          currentMobileSheetHeight,
+        );
+        root.style.setProperty(
+          "--mobile-sheet-visible-height",
+          `${currentMobileSheetHeight}px`,
+        );
+        root.style.setProperty(
+          "--mobile-sheet-max-height",
+          `${getMobileSheetMaxHeight()}px`,
+        );
+      };
+      const setMobileSheetHeight = (height) => {
+        currentMobileSheetHeight = clampMobileSheetHeight(height);
+        syncMobileSheetHeight();
+      };
+      const snapMobileSheet = (target = "nearest") => {
+        const snapPoints = [
+          MOBILE_SHEET_MIN_HEIGHT,
+          getMobileSheetMidHeight(),
+          getMobileSheetMaxHeight(),
+        ];
+
+        if (target === "collapsed") {
+          setMobileSheetHeight(snapPoints[0]);
+          return;
+        }
+
+        if (target === "mid") {
+          setMobileSheetHeight(snapPoints[1]);
+          return;
+        }
+
+        if (target === "expanded") {
+          setMobileSheetHeight(snapPoints[2]);
+          return;
+        }
+
+        const nextHeight = snapPoints.reduce((closest, point) =>
+          Math.abs(point - currentMobileSheetHeight) <
+          Math.abs(closest - currentMobileSheetHeight)
+            ? point
+            : closest,
+        );
+
+        setMobileSheetHeight(nextHeight);
+      };
       const getSidebarMaxWidth = () =>
         Math.max(
           MIN_SIDEBAR_WIDTH,
@@ -493,7 +574,10 @@ const sortedShops = [...shops].sort((left, right) =>
         sidebarReopen.setAttribute("aria-hidden", String(!hidden));
       };
       const showSidebar = () => {
-        if (isCompact()) return;
+        if (isCompact()) {
+          snapMobileSheet("mid");
+          return;
+        }
 
         if (isSidebarHidden()) {
           currentSidebarWidth = Math.max(
@@ -507,14 +591,26 @@ const sortedShops = [...shops].sort((left, right) =>
         syncSidebarVisibility();
       };
       const hideSidebar = () => {
-        if (isCompact()) return;
+        if (isCompact()) {
+          snapMobileSheet("collapsed");
+          return;
+        }
         root.classList.remove("is-sidebar-collapsing");
         root.classList.add("is-sidebar-hidden");
         syncSidebarVisibility();
       };
 
       const getPadding = () => {
-        if (isCompact() || isSidebarHidden()) {
+        if (isCompact()) {
+          return {
+            top: 24,
+            right: 24,
+            bottom: currentMobileSheetHeight + 24,
+            left: 24,
+          };
+        }
+
+        if (isSidebarHidden()) {
           return { top: 28, right: 28, bottom: 28, left: 28 };
         }
 
@@ -528,7 +624,13 @@ const sortedShops = [...shops].sort((left, right) =>
 
       const fitToInitialBounds = (duration) => {
         const padding = getPadding();
-        const [southWest, northEast] = initialBounds;
+        const mobileBounds = [
+          [center[0] - 0.05, center[1] - 0.042],
+          [center[0] + 0.05, center[1] + 0.042],
+        ];
+        const [southWest, northEast] = isCompact()
+          ? mobileBounds
+          : initialBounds;
 
         map.fitBounds(
           [
@@ -538,7 +640,9 @@ const sortedShops = [...shops].sort((left, right) =>
           {
             paddingTopLeft: [padding.left, padding.top],
             paddingBottomRight: [padding.right, padding.bottom],
-            maxZoom: INITIAL_VIEW_MAX_ZOOM,
+            maxZoom: isCompact()
+              ? MOBILE_INITIAL_VIEW_MAX_ZOOM
+              : INITIAL_VIEW_MAX_ZOOM,
             animate: duration > 0,
           },
         );
@@ -841,9 +945,30 @@ const sortedShops = [...shops].sort((left, right) =>
       };
 
       const centerOnShop = (shop) => {
-        const padding = getPadding();
-        const zoom = map.getZoom();
         const targetLatLng = L.latLng(shop.coordinates[1], shop.coordinates[0]);
+        const zoom = map.getZoom();
+
+        if (isCompact()) {
+          const topPadding = 24;
+          const bottomPadding = currentMobileSheetHeight + 24;
+          const projectedPoint = map.project(targetLatLng, zoom);
+          const offsetPoint = L.point(
+            0,
+            (topPadding - bottomPadding) / 2,
+          );
+          const centeredLatLng = map.unproject(
+            projectedPoint.subtract(offsetPoint),
+            zoom,
+          );
+
+          map.flyTo(centeredLatLng, zoom, {
+            animate: true,
+            duration: 0.85,
+          });
+          return;
+        }
+
+        const padding = getPadding();
         const projectedPoint = map.project(targetLatLng, zoom);
         const offsetPoint = L.point(
           (padding.left - padding.right) / 2,
@@ -914,9 +1039,9 @@ const sortedShops = [...shops].sort((left, right) =>
           const isActive =
             item instanceof HTMLElement && item.dataset.shopId === shop.id;
           item.classList.toggle("is-active", isActive);
-          if (isActive) {
+          if (isActive && !isCompact()) {
             item.scrollIntoView({ block: "nearest", behavior: "smooth" });
-            if (revealSidebar && !isCompact()) {
+            if (revealSidebar) {
               requestAnimationFrame(() => item.focus({ preventScroll: true }));
             }
           }
@@ -967,7 +1092,7 @@ const sortedShops = [...shops].sort((left, right) =>
             }),
           })
             .addTo(map)
-            .on("click", () => setActiveShop(shop, { revealSidebar: true }));
+            .on("click", () => setActiveShop(shop));
 
           markersById.set(shop.id, marker);
 
@@ -1022,6 +1147,7 @@ const sortedShops = [...shops].sort((left, right) =>
       }
 
       syncSidebarWidth();
+      syncMobileSheetHeight();
       syncSidebarVisibility();
       syncFilterButtons();
 
@@ -1029,6 +1155,11 @@ const sortedShops = [...shops].sort((left, right) =>
       let dragStartX = 0;
       let dragStartWidth = currentSidebarWidth;
       let dragCurrentWidth = currentSidebarWidth;
+      let activeMobileSheetPointerId = null;
+      let mobileSheetDragStartY = 0;
+      let mobileSheetDragStartHeight = currentMobileSheetHeight;
+      let mobileSheetDragCurrentHeight = currentMobileSheetHeight;
+      let mobileSheetWasDragged = false;
 
       const resizeSidebar = (nextWidth) => {
         currentSidebarWidth = clampSidebarWidth(nextWidth);
@@ -1105,6 +1236,65 @@ const sortedShops = [...shops].sort((left, right) =>
         map.invalidateSize();
       });
 
+      const stopResizingMobileSheet = () => {
+        if (activeMobileSheetPointerId === null) return;
+
+        if (mobileSheetHandle instanceof HTMLElement) {
+          mobileSheetHandle.releasePointerCapture(activeMobileSheetPointerId);
+        }
+
+        activeMobileSheetPointerId = null;
+        snapMobileSheet();
+      };
+
+      mobileSheetHandle?.addEventListener("pointerdown", (event) => {
+        if (!isCompact() || event.button !== 0) return;
+
+        activeMobileSheetPointerId = event.pointerId;
+        mobileSheetDragStartY = event.clientY;
+        mobileSheetDragStartHeight = currentMobileSheetHeight;
+        mobileSheetDragCurrentHeight = currentMobileSheetHeight;
+        mobileSheetWasDragged = false;
+        mobileSheetHandle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      mobileSheetHandle?.addEventListener("pointermove", (event) => {
+        if (activeMobileSheetPointerId !== event.pointerId || !isCompact()) {
+          return;
+        }
+
+        if (Math.abs(event.clientY - mobileSheetDragStartY) > 6) {
+          mobileSheetWasDragged = true;
+        }
+
+        mobileSheetDragCurrentHeight =
+          mobileSheetDragStartHeight - (event.clientY - mobileSheetDragStartY);
+        setMobileSheetHeight(mobileSheetDragCurrentHeight);
+      });
+
+      mobileSheetHandle?.addEventListener("pointerup", stopResizingMobileSheet);
+      mobileSheetHandle?.addEventListener(
+        "pointercancel",
+        stopResizingMobileSheet,
+      );
+      mobileSheetHandle?.addEventListener("click", () => {
+        if (
+          !isCompact() ||
+          activeMobileSheetPointerId !== null ||
+          mobileSheetWasDragged
+        ) {
+          mobileSheetWasDragged = false;
+          return;
+        }
+
+        const nextTarget =
+          currentMobileSheetHeight <= MOBILE_SHEET_MIN_HEIGHT + 12
+            ? "mid"
+            : "collapsed";
+        snapMobileSheet(nextTarget);
+      });
+
       const resizeObserver = new ResizeObserver(() => {
         map.invalidateSize();
       });
@@ -1113,6 +1303,9 @@ const sortedShops = [...shops].sort((left, right) =>
       window.addEventListener("resize", () => {
         if (isCompact()) {
           root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
+          syncMobileSheetHeight();
+        } else {
+          currentMobileSheetHeight = MOBILE_SHEET_DEFAULT_HEIGHT;
         }
         syncSidebarWidth();
         syncSidebarVisibility();
@@ -1140,6 +1333,8 @@ const sortedShops = [...shops].sort((left, right) =>
   .coffee-map-section {
     --sidebar-width: 22rem;
     --shop-list-inline-gap: 0.7rem;
+    --mobile-sheet-visible-height: 8rem;
+    --mobile-sheet-max-height: 32rem;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -1182,6 +1377,38 @@ const sortedShops = [...shops].sort((left, right) =>
     transition:
       transform 220ms ease,
       opacity 180ms ease;
+  }
+
+  .coffee-map-sidebar__sheet-handle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.1rem 0 0.25rem;
+    border: 0;
+    background: transparent;
+    cursor: ns-resize;
+    touch-action: none;
+  }
+
+  .coffee-map-sidebar__sheet-grip {
+    display: block;
+    width: 2.6rem;
+    height: 0.32rem;
+    border-radius: 999px;
+    background: rgba(130, 130, 130, 0.55);
+    transition: background-color 180ms ease;
+  }
+
+  .coffee-map-sidebar__sheet-handle:hover
+    .coffee-map-sidebar__sheet-grip,
+  .coffee-map-sidebar__sheet-handle:focus-visible
+    .coffee-map-sidebar__sheet-grip {
+    background: rgba(90, 90, 90, 0.7);
+  }
+
+  .coffee-map-sidebar__sheet-handle:focus-visible {
+    outline: none;
   }
 
   .coffee-map-section.is-sidebar-hidden .coffee-map-sidebar {
@@ -1919,8 +2146,24 @@ const sortedShops = [...shops].sort((left, right) =>
 
   @media (max-width: 900px) {
     .coffee-map-sidebar {
-      width: min(20rem, calc(100vw - 1.5rem));
-      padding: 0.85rem;
+      top: auto;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      gap: 0.75rem;
+      width: auto;
+      height: var(--mobile-sheet-max-height);
+      max-height: var(--mobile-sheet-max-height);
+      padding: 0.5rem 0.85rem 0.85rem;
+      border-top: 1px solid rgba(229, 229, 229, 0.96);
+      border-right: 0;
+      box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.12);
+      transform: translateY(
+        calc(
+          var(--mobile-sheet-max-height) - var(--mobile-sheet-visible-height)
+        )
+      );
+      opacity: 1;
     }
 
     .coffee-sidebar-edge {
@@ -1934,6 +2177,27 @@ const sortedShops = [...shops].sort((left, right) =>
     .coffee-map-section .leaflet-bottom.leaflet-right,
     .coffee-map-section .leaflet-bottom.leaflet-left {
       margin-bottom: 1rem;
+    }
+
+    .coffee-map-sidebar__sheet-handle {
+      display: flex;
+    }
+
+    .coffee-map-sidebar__header {
+      padding-top: 0;
+    }
+
+    .coffee-map-sidebar__header h2 {
+      display: none;
+    }
+
+    .coffee-map-sidebar__summary {
+      margin-top: 0;
+      font-size: 0.84rem;
+    }
+
+    .coffee-map-sidebar__list {
+      padding-bottom: 0.3rem;
     }
   }
 
