@@ -68,6 +68,18 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   (
     Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>
   ).filter((key) => Boolean(shop.details?.[key]));
+
+const neighborhoodOptions = Array.from(
+  new Set(
+    shops
+      .map((shop) => shop.neighborhood?.trim())
+      .filter((neighborhood): neighborhood is string => Boolean(neighborhood)),
+  ),
+).sort((left, right) => left.localeCompare(right));
+
+const sortedShops = [...shops].sort((left, right) =>
+  left.name.localeCompare(right.name),
+);
 ---
 
 <section
@@ -98,11 +110,67 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     >
       <div class="coffee-map-sidebar__header">
         <h2 id="coffee-map-title">{title}</h2>
+        <p class="coffee-map-sidebar__summary" data-filter-summary>
+          {shops.length} {shops.length === 1 ? "shop" : "shops"}
+        </p>
+      </div>
+
+      <div class="coffee-map-sidebar__filters" aria-label="Filter coffee shops">
+        <details class="coffee-map-filter-group">
+          <summary class="coffee-map-filter-group__summary">
+            <span class="coffee-map-filter-group__label">Amenities</span>
+          </summary>
+          <div class="coffee-map-filter-group__options">
+            {(
+              Object.entries(amenityDefinitions) as Array<
+                [
+                  keyof typeof amenityDefinitions,
+                  (typeof amenityDefinitions)[keyof typeof amenityDefinitions],
+                ]
+              >
+            ).map(([amenity, definition]) => (
+              <button
+                class="coffee-map-filter coffee-map-filter--amenity"
+                type="button"
+                data-amenity-filter={amenity}
+                aria-pressed="false"
+                aria-label={`Filter by ${definition.label.toLowerCase()}`}
+                title={`Filter by ${definition.label.toLowerCase()}`}
+              >
+                <span
+                  class="coffee-map-filter__icon"
+                  set:html={definition.icon}
+                />
+                <span class="coffee-map-filter__label">{definition.label}</span>
+                </button>
+              ))}
+          </div>
+        </details>
+
+        {neighborhoodOptions.length > 0 && (
+          <details class="coffee-map-filter-group">
+            <summary class="coffee-map-filter-group__summary">
+              <span class="coffee-map-filter-group__label">Neighborhood</span>
+            </summary>
+            <div class="coffee-map-filter-group__options">
+              {neighborhoodOptions.map((neighborhood) => (
+                <button
+                  class="coffee-map-filter"
+                  type="button"
+                  data-neighborhood-filter={neighborhood}
+                  aria-pressed="false"
+                >
+                  {neighborhood}
+                </button>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
 
       <div class="coffee-map-sidebar__list" data-shop-list>
         {
-          shops.map((shop) => (
+          sortedShops.map((shop) => (
             <button
               class="coffee-shop-item"
               type="button"
@@ -192,6 +260,13 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
     const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
     const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
+    const amenityFilterButtons = Array.from(
+      root.querySelectorAll("[data-amenity-filter]"),
+    );
+    const neighborhoodFilterButtons = Array.from(
+      root.querySelectorAll("[data-neighborhood-filter]"),
+    );
+    const filterSummary = root.querySelector("[data-filter-summary]");
 
     if (
       mapContainer instanceof HTMLElement &&
@@ -380,6 +455,15 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
       const markerElements = new Map();
       const markersById = new Map();
+      const listItemsById = new Map(
+        listItems
+          .filter((item) => item instanceof HTMLElement && item.dataset.shopId)
+          .map((item) => [item.dataset.shopId, item]),
+      );
+      const shopsById = new Map(shops.map((shop) => [shop.id, shop]));
+      const activeAmenityFilters = new Set();
+      const activeNeighborhoodFilters = new Set();
+      let visibleShopIds = new Set(shops.map((shop) => shop.id));
       let activeShopId = null;
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
       const isSidebarHidden = () =>
@@ -473,6 +557,85 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         Object.keys(amenityDefinitions).filter((key) =>
           Boolean(shop.details?.[key]),
         );
+      const matchesFilters = (shop) => {
+        const matchesAmenities = Array.from(activeAmenityFilters).every(
+          (amenity) => Boolean(shop.details?.[amenity]),
+        );
+        const neighborhood = shop.neighborhood?.trim();
+        const matchesNeighborhoods =
+          activeNeighborhoodFilters.size === 0 ||
+          (Boolean(neighborhood) &&
+            activeNeighborhoodFilters.has(neighborhood));
+
+        return matchesAmenities && matchesNeighborhoods;
+      };
+      const syncFilterSummary = (count) => {
+        if (!(filterSummary instanceof HTMLElement)) return;
+
+        const filtersActive =
+          activeAmenityFilters.size > 0 || activeNeighborhoodFilters.size > 0;
+        const noun = count === 1 ? "shop" : "shops";
+
+        filterSummary.textContent = filtersActive
+          ? `${count} ${noun} match`
+          : `${count} ${noun}`;
+      };
+      const syncFilterButtons = () => {
+        for (const button of amenityFilterButtons) {
+          const amenity = button.dataset.amenityFilter;
+          const isActive = Boolean(
+            amenity && activeAmenityFilters.has(amenity),
+          );
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        }
+
+        for (const button of neighborhoodFilterButtons) {
+          const neighborhood = button.dataset.neighborhoodFilter;
+          const isActive = Boolean(
+            neighborhood && activeNeighborhoodFilters.has(neighborhood),
+          );
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        }
+      };
+      const applyFilters = () => {
+        const nextVisibleShopIds = new Set();
+
+        for (const shop of shops) {
+          const isVisible = matchesFilters(shop);
+          const listItem = listItemsById.get(shop.id);
+          const marker = markersById.get(shop.id);
+          const markerNode = marker?.getElement();
+
+          if (listItem instanceof HTMLElement) {
+            listItem.hidden = !isVisible;
+          }
+
+          if (markerNode instanceof HTMLElement) {
+            markerNode.classList.toggle("is-filtered-out", !isVisible);
+          }
+
+          if (isVisible) {
+            nextVisibleShopIds.add(shop.id);
+          }
+        }
+
+        visibleShopIds = nextVisibleShopIds;
+
+        if (
+          activeShopId &&
+          !visibleShopIds.has(activeShopId) &&
+          shopsById.has(activeShopId)
+        ) {
+          clearActiveShop();
+        }
+
+        syncFilterSummary(visibleShopIds.size);
+        syncFilterButtons();
+      };
 
       const formatDayRange = (days) => {
         const indexes = days
@@ -715,6 +878,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
       const setActiveShop = (shop, options = {}) => {
         const { revealSidebar = false, centerMap = false } = options;
+        if (!visibleShopIds.has(shop.id)) return;
 
         if (activeShopId === shop.id) {
           clearActiveShop();
@@ -814,19 +978,52 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
             markerElements.set(shop.id, liveMarker);
           }
         }
+
+        applyFilters();
       };
 
       for (const item of listItems) {
         item.addEventListener("click", () => {
-          const shop = shops.find((entry) => entry.id === item.dataset.shopId);
+          const shop = shopsById.get(item.dataset.shopId);
           if (shop) {
             setActiveShop(shop, { revealSidebar: true, centerMap: true });
           }
         });
       }
 
+      for (const button of amenityFilterButtons) {
+        button.addEventListener("click", () => {
+          const amenity = button.dataset.amenityFilter;
+          if (!amenity) return;
+
+          if (activeAmenityFilters.has(amenity)) {
+            activeAmenityFilters.delete(amenity);
+          } else {
+            activeAmenityFilters.add(amenity);
+          }
+
+          applyFilters();
+        });
+      }
+
+      for (const button of neighborhoodFilterButtons) {
+        button.addEventListener("click", () => {
+          const neighborhood = button.dataset.neighborhoodFilter;
+          if (!neighborhood) return;
+
+          if (activeNeighborhoodFilters.has(neighborhood)) {
+            activeNeighborhoodFilters.delete(neighborhood);
+          } else {
+            activeNeighborhoodFilters.add(neighborhood);
+          }
+
+          applyFilters();
+        });
+      }
+
       syncSidebarWidth();
       syncSidebarVisibility();
+      syncFilterButtons();
 
       let activePointerId = null;
       let dragStartX = 0;
@@ -1102,6 +1299,180 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     line-height: 1;
   }
 
+  .coffee-map-sidebar__summary {
+    margin: 0.15rem 0 0;
+    color: #666;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .coffee-map-sidebar__filters {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0 0.15rem;
+  }
+
+  .coffee-map-filter-group {
+    display: grid;
+    gap: 0.48rem;
+    padding: 0;
+    border-radius: 0;
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-map-filter-group__summary {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: auto;
+    padding: 0.7rem 0.85rem;
+    border: 0;
+    background: transparent;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .coffee-map-filter-group__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .coffee-map-filter-group__summary::after {
+    content: "";
+    position: relative;
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    margin-left: auto;
+    border: 1px solid rgba(200, 200, 200, 0.96);
+    border-radius: 999px;
+    background:
+      linear-gradient(#666, #666) center / 0.5rem 1.5px no-repeat,
+      linear-gradient(#666, #666) center / 1.5px 0.5rem no-repeat,
+      rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    transition:
+      background-size 180ms ease,
+      border-color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-map-filter-group[open] .coffee-map-filter-group__summary::after {
+    background-size:
+      0.5rem 1.5px,
+      0 0,
+      auto;
+  }
+
+  .coffee-map-filter-group:hover,
+  .coffee-map-filter-group:focus-within {
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .coffee-map-filter-group__summary:hover,
+  .coffee-map-filter-group__summary:focus-visible {
+    background: transparent;
+    transform: translateY(-1px);
+  }
+
+  .coffee-map-filter-group__summary:hover::after,
+  .coffee-map-filter-group__summary:focus-visible::after {
+    border-color: rgba(170, 170, 170, 0.98);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+    transform: scale(1.04);
+  }
+
+  .coffee-map-filter-group__summary:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-filter-group__label {
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .coffee-map-filter-group__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0 0.85rem 0.75rem;
+  }
+
+  .coffee-map-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.42rem;
+    min-height: 2rem;
+    padding: 0.42rem 0.72rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    color: #555;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .coffee-map-filter--amenity {
+    padding-inline: 0.66rem 0.78rem;
+  }
+
+  .coffee-map-filter:hover,
+  .coffee-map-filter:focus-visible,
+  .coffee-map-filter.is-active {
+    border-color: rgba(186, 186, 186, 0.96);
+    background: rgba(255, 255, 255, 0.98);
+    color: #222;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .coffee-map-filter.is-active {
+    border-color: rgba(134, 134, 134, 0.96);
+    background: #fff;
+  }
+
+  .coffee-map-filter:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-filter__icon {
+    display: inline-flex;
+    width: 0.98rem;
+    height: 0.98rem;
+  }
+
+  .coffee-map-filter__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .coffee-map-filter__label {
+    white-space: nowrap;
+  }
+
   .coffee-map-sidebar__list {
     display: flex;
     flex: 1;
@@ -1133,6 +1504,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       border-color 180ms ease,
       background-color 180ms ease,
       box-shadow 180ms ease;
+  }
+
+  .coffee-shop-item[hidden] {
+    display: none;
   }
 
   .coffee-shop-item:hover,
@@ -1338,6 +1713,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   .coffee-map-section .coffee-marker-wrapper {
     background: transparent;
     border: 0;
+  }
+
+  .coffee-map-section .leaflet-marker-icon.is-filtered-out {
+    display: none;
   }
 
   .coffee-map-section
