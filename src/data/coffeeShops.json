@@ -490,7 +490,7 @@
           -122.427997,
           37.800079
         ],
-        "description": "studied here with a friend\nvery friendly people",
+        "description": "studied here with a friend",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/the-coffee-berry.png",
         "website": "https://www.thecoffeeberrysf.com/",
@@ -511,6 +511,50 @@
                 "Sat"
               ],
               "label": "7 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "stardust-coffee-house",
+        "name": "Stardust Coffee House",
+        "coordinates": [
+          -121.931081,
+          37.287676
+        ],
+        "description": "used to study here all the time\nfriend met his girlfriend here",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/stardust-coffee-house.jpg",
+        "website": "https://www.stardustsuper.com/",
+        "neighborhood": "Campbell",
+        "address": "1725 S Bascom Ave #1100",
+        "addressUrl": "https://maps.app.goo.gl/BMBAvpDmbESnMJ1D8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "9 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "8 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "9 AM – 6 PM"
             }
           ]
         }

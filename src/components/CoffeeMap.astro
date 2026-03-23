@@ -7,6 +7,7 @@ interface Props {
   cityLabel?: string;
   shops: CoffeeShop[];
   center?: [number, number];
+  initialBounds?: [[number, number], [number, number]];
 }
 
 const {
@@ -14,6 +15,10 @@ const {
   cityLabel = "San Francisco, California",
   shops,
   center = [-122.433, 37.764],
+  initialBounds = [
+    [-122.4326, 37.78215],
+    [-122.4254, 37.78785],
+  ],
 } = Astro.props;
 
 const mapId = "favorite-coffee-map";
@@ -21,18 +26,15 @@ const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 const amenityDefinitions = {
   wifi: {
     label: "Wifi",
-    icon:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.7 8.9a14.8 14.8 0 0 1 18.6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M6 12.3a10 10 0 0 1 12 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M9.3 15.7a5.1 5.1 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><circle cx="12" cy="19" r="1.35" fill="currentColor"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.7 8.9a14.8 14.8 0 0 1 18.6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M6 12.3a10 10 0 0 1 12 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M9.3 15.7a5.1 5.1 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><circle cx="12" cy="19" r="1.35" fill="currentColor"/></svg>',
   },
   sockets: {
     label: "Sockets",
-    icon:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.8v4.1M14 4.8v4.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M8.3 8.9h7.4v3.2a3.7 3.7 0 0 1-7.4 0V8.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 15.8v1.8a2.9 2.9 0 0 1-2.9 2.9H7.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.8v4.1M14 4.8v4.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M8.3 8.9h7.4v3.2a3.7 3.7 0 0 1-7.4 0V8.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 15.8v1.8a2.9 2.9 0 0 1-2.9 2.9H7.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
   },
   seating: {
     label: "Seating",
-    icon:
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.1 6.2h7.8v5.2H8.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.2 11.4h11.6v3.5H6.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 14.9V19M16 14.9V19M5.2 19h13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.1 6.2h7.8v5.2H8.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.2 11.4h11.6v3.5H6.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 14.9V19M16 14.9V19M5.2 19h13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   },
 } as const;
 
@@ -63,9 +65,9 @@ const getSidebarMeta = (shop: CoffeeShop) =>
   [shop.neighborhood].filter(Boolean).join(" • ");
 
 const getVisibleAmenities = (shop: CoffeeShop) =>
-  (Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>).filter(
-    (key) => Boolean(shop.details?.[key]),
-  );
+  (
+    Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>
+  ).filter((key) => Boolean(shop.details?.[key]));
 ---
 
 <section
@@ -74,6 +76,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   aria-labelledby="coffee-map-title"
   data-map-root={mapId}
   data-center={JSON.stringify(center)}
+  data-initial-bounds={JSON.stringify(initialBounds)}
   data-amenity-definitions={JSON.stringify(amenityDefinitions)}
   data-shops={JSON.stringify(shops)}
 >
@@ -85,8 +88,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       type="button"
       aria-controls="coffee-map-sidebar"
       aria-label="Open sidebar"
-      data-sidebar-reopen
-    ></button>
+      data-sidebar-reopen></button>
 
     <aside
       id="coffee-map-sidebar"
@@ -121,7 +123,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
                   <span class="coffee-shop-item__identity">
                     <span class="coffee-shop-item__name">{shop.name}</span>
                     {getSidebarMeta(shop) && (
-                      <span class="coffee-shop-item__meta">{getSidebarMeta(shop)}</span>
+                      <span class="coffee-shop-item__meta">
+                        {getSidebarMeta(shop)}
+                      </span>
                     )}
                   </span>
                   {getVisibleAmenities(shop).length > 0 && (
@@ -136,7 +140,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
                             class="coffee-shop-chip__icon"
                             set:html={amenityDefinitions[amenity].icon}
                           />
-                          <span class="sr-only">{amenityDefinitions[amenity].label}</span>
+                          <span class="sr-only">
+                            {amenityDefinitions[amenity].label}
+                          </span>
                         </span>
                       ))}
                     </span>
@@ -159,7 +165,8 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         aria-orientation="vertical"
         tabindex="0"
         data-sidebar-resizer
-      ></div>
+      >
+      </div>
     </aside>
   </div>
 </section>
@@ -171,9 +178,15 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
   if (root instanceof HTMLElement) {
     const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const amenityDefinitions = JSON.parse(root.dataset.amenityDefinitions ?? "{}");
+    const amenityDefinitions = JSON.parse(
+      root.dataset.amenityDefinitions ?? "{}",
+    );
     const shops = JSON.parse(root.dataset.shops ?? "[]");
     const center = JSON.parse(root.dataset.center ?? "[-122.433, 37.764]");
+    const initialBounds = JSON.parse(
+      root.dataset.initialBounds ??
+        "[[-122.4326, 37.78215], [-122.4254, 37.78785]]",
+    );
     const mapContainer = root.querySelector("[data-map-canvas]");
     const sidebar = root.querySelector("[data-sidebar]");
     const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
@@ -189,16 +202,19 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     ) {
       mapContainer.dataset.initialized = "true";
 
-      const tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+      const tileUrl =
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
       const DEFAULT_SIDEBAR_WIDTH = 352;
       const MIN_SIDEBAR_WIDTH = 248;
       const MAX_SIDEBAR_WIDTH = 448;
       const HIDE_SIDEBAR_THRESHOLD = 180;
+      const INITIAL_VIEW_ZOOM = 13;
+      const INITIAL_VIEW_MAX_ZOOM = 14;
       let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
 
       const map = L.map(mapContainer, {
         center: [center[1], center[0]],
-        zoom: 11,
+        zoom: INITIAL_VIEW_ZOOM,
         zoomControl: false,
         attributionControl: false,
         scrollWheelZoom: false,
@@ -277,10 +293,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
       const getWheelPoint = (event) => {
         const rect = mapContainer.getBoundingClientRect();
-        return L.point(
-          event.clientX - rect.left,
-          event.clientY - rect.top,
-        );
+        return L.point(event.clientX - rect.left, event.clientY - rect.top);
       };
 
       const queueZoomFromWheel = (steps, containerPoint) => {
@@ -368,15 +381,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       const markerElements = new Map();
       const markersById = new Map();
       let activeShopId = null;
-      const bounds =
-        shops.length > 0
-          ? L.latLngBounds(
-              shops.map((shop) => [shop.coordinates[1], shop.coordinates[0]]),
-            )
-          : null;
-
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
-      const isSidebarHidden = () => root.classList.contains("is-sidebar-hidden");
+      const isSidebarHidden = () =>
+        root.classList.contains("is-sidebar-hidden");
       const getSidebarMaxWidth = () =>
         Math.max(
           MIN_SIDEBAR_WIDTH,
@@ -390,7 +397,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         currentSidebarWidth = width;
         root.style.setProperty("--sidebar-width", `${width}px`);
         sidebarResizer.setAttribute("aria-valuemin", String(MIN_SIDEBAR_WIDTH));
-        sidebarResizer.setAttribute("aria-valuemax", String(getSidebarMaxWidth()));
+        sidebarResizer.setAttribute(
+          "aria-valuemax",
+          String(getSidebarMaxWidth()),
+        );
         sidebarResizer.setAttribute("aria-valuenow", String(Math.round(width)));
       };
       const syncSidebarVisibility = () => {
@@ -402,7 +412,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         if (isCompact()) return;
 
         if (isSidebarHidden()) {
-          currentSidebarWidth = Math.max(currentSidebarWidth, DEFAULT_SIDEBAR_WIDTH);
+          currentSidebarWidth = Math.max(
+            currentSidebarWidth,
+            DEFAULT_SIDEBAR_WIDTH,
+          );
         }
 
         root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
@@ -429,16 +442,22 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         };
       };
 
-      const fitToMarkers = (duration) => {
-        if (!bounds) return;
+      const fitToInitialBounds = (duration) => {
         const padding = getPadding();
+        const [southWest, northEast] = initialBounds;
 
-        map.fitBounds(bounds, {
-          paddingTopLeft: [padding.left, padding.top],
-          paddingBottomRight: [padding.right, padding.bottom],
-          maxZoom: 13,
-          animate: duration > 0,
-        });
+        map.fitBounds(
+          [
+            [southWest[1], southWest[0]],
+            [northEast[1], northEast[0]],
+          ],
+          {
+            paddingTopLeft: [padding.left, padding.top],
+            paddingBottomRight: [padding.right, padding.bottom],
+            maxZoom: INITIAL_VIEW_MAX_ZOOM,
+            animate: duration > 0,
+          },
+        );
       };
 
       const activePopup = L.popup({
@@ -451,7 +470,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       });
 
       const getVisibleAmenities = (shop) =>
-        Object.keys(amenityDefinitions).filter((key) => Boolean(shop.details?.[key]));
+        Object.keys(amenityDefinitions).filter((key) =>
+          Boolean(shop.details?.[key]),
+        );
 
       const formatDayRange = (days) => {
         const indexes = days
@@ -467,7 +488,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         );
 
         if (isContiguous) {
-          return DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]];
+          return (
+            DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]]
+          );
         }
 
         return indexes.map((index) => DAY_ORDER[index]).join(", ");
@@ -476,7 +499,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       const formatHoursEntries = (hours) =>
         Array.isArray(hours)
           ? hours
-              .map((entry) => formatDayRange(entry.days || []) + " " + (entry.label || ""))
+              .map(
+                (entry) =>
+                  formatDayRange(entry.days || []) + " " + (entry.label || ""),
+              )
               .filter((entry) => entry.trim())
           : [];
 
@@ -555,7 +581,10 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
           popupDetails.append(popupDescription);
         }
 
-        if (Array.isArray(shop.details?.hours) && shop.details.hours.length > 0) {
+        if (
+          Array.isArray(shop.details?.hours) &&
+          shop.details.hours.length > 0
+        ) {
           const popupHours = document.createElement("div");
           popupHours.className = "coffee-map-popup__schedule";
 
@@ -602,7 +631,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         }
 
         if (shop.address) {
-          const popupAddress = document.createElement(shop.addressUrl ? "a" : "span");
+          const popupAddress = document.createElement(
+            shop.addressUrl ? "a" : "span",
+          );
           popupAddress.className = shop.addressUrl
             ? "coffee-map-popup__address coffee-map-popup__text-link"
             : "coffee-map-popup__address";
@@ -621,8 +652,12 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
           const popupLinksRow = document.createElement("div");
           popupLinksRow.className = "coffee-map-popup__links";
 
-          const leftLink = popupLinks.find((link) => link.textContent === "Website");
-          const rightLink = popupLinks.find((link) => link.textContent !== "Website");
+          const leftLink = popupLinks.find(
+            (link) => link.textContent === "Website",
+          );
+          const rightLink = popupLinks.find(
+            (link) => link.textContent !== "Website",
+          );
 
           if (leftLink) {
             popupLinksRow.append(leftLink);
@@ -712,7 +747,8 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
         }
 
         for (const item of listItems) {
-          const isActive = item instanceof HTMLElement && item.dataset.shopId === shop.id;
+          const isActive =
+            item instanceof HTMLElement && item.dataset.shopId === shop.id;
           item.classList.toggle("is-active", isActive);
           if (isActive) {
             item.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -771,7 +807,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
 
           markersById.set(shop.id, marker);
 
-          const liveMarker = marker.getElement()?.querySelector(".coffee-marker");
+          const liveMarker = marker
+            .getElement()
+            ?.querySelector(".coffee-marker");
           if (liveMarker instanceof HTMLElement) {
             markerElements.set(shop.id, liveMarker);
           }
@@ -893,9 +931,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
       map.whenReady(() => {
         addMarkers();
 
-        fitToMarkers(0);
+        fitToInitialBounds(0);
         requestAnimationFrame(() => map.invalidateSize());
-        requestAnimationFrame(() => fitToMarkers(1600));
+        requestAnimationFrame(() => fitToInitialBounds(1600));
       });
     }
   }
@@ -1302,7 +1340,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     border: 0;
   }
 
-  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content-wrapper {
+  .coffee-map-section
+    .leaflet-popup.coffee-map-popup
+    .leaflet-popup-content-wrapper {
     border: 1px solid rgba(229, 229, 229, 0.96);
     border-radius: 1.2rem;
     background: rgba(255, 255, 255, 0.96);
@@ -1317,7 +1357,9 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
     max-width: 23rem;
   }
 
-  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-tip-container {
+  .coffee-map-section
+    .leaflet-popup.coffee-map-popup
+    .leaflet-popup-tip-container {
     margin-top: -1px;
   }
 
@@ -1375,7 +1417,7 @@ const getVisibleAmenities = (shop: CoffeeShop) =>
   }
 
   .coffee-map-section .coffee-map-popup__neighborhood {
-    margin-top: 0.20rem;
+    margin-top: 0.2rem;
     margin-bottom: 0;
     line-height: 1;
   }
