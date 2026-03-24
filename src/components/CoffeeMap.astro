@@ -459,12 +459,27 @@ const sortedShops = [...shops].sort((left, right) =>
         return true;
       };
 
-      const handleWheelZoom = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+      const handleMouseWheelZoom = (event) => {
+        if (
+          event.ctrlKey ||
+          isTrackpadWheelGesture(event) ||
+          event.deltaY === 0
+        ) {
+          return false;
+        }
 
+        event.preventDefault();
+
+        queueZoomFromWheel(-Math.sign(event.deltaY), getWheelPoint(event));
+        return true;
+      };
+
+      const handleWheelZoom = (event) => {
         if (handleTrackpadPinchZoom(event)) return;
-        handleTrackpadWheelZoom(event);
+        if (handleTrackpadWheelZoom(event)) return;
+        if (!handleMouseWheelZoom(event)) return;
+
+        event.stopPropagation();
       };
 
       mapContainer.addEventListener("wheel", handleWheelZoom, {
