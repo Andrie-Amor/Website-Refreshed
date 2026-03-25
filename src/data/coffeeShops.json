@@ -324,7 +324,7 @@
               "days": [
                 "Sun"
               ],
-              "label": "Clo ed"
+              "label": "Closed"
             },
             {
               "days": [
@@ -374,7 +374,7 @@
               "days": [
                 "Thu"
               ],
-              "label": "Clo ed"
+              "label": "Closed"
             },
             {
               "days": [
@@ -555,6 +555,37 @@
                 "Sat"
               ],
               "label": "9 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "paper-son-coffee",
+        "name": "Paper Son Coffee",
+        "coordinates": [
+          -122.388673,
+          37.760998
+        ],
+        "description": "really good ube bread\nclose to YC",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/paper-son-coffee.jpeg",
+        "website": "http://papersoncoffee.com/",
+        "neighborhood": "Dogpatch",
+        "address": "2343 3rd St UNIT 100",
+        "addressUrl": "https://maps.app.goo.gl/fwa9vr6emJSEZaZd6",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 2 PM"
             }
           ]
         }
