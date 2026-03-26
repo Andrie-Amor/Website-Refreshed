@@ -589,6 +589,156 @@
             }
           ]
         }
+      },
+      {
+        "id": "juniper",
+        "name": "Juniper",
+        "coordinates": [
+          -122.421233,
+          37.790944
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/juniper.jpg",
+        "website": "http://www.juniper.cafe/",
+        "neighborhood": "Polk Gulch",
+        "address": "1401 Polk St",
+        "addressUrl": "https://maps.app.goo.gl/yfaF9pysz8EARMtMA",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7:30 AM – 3 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "cafe-reveille-polk-street",
+        "name": "Cafe Réveille",
+        "coordinates": [
+          -122.42163,
+          37.795116
+        ],
+        "description": "love this spot",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/cafe-reveille-polk-street.webp",
+        "website": "http://cafereveille.com/",
+        "neighborhood": "Polk Gulch",
+        "address": "1998 Polk St",
+        "addressUrl": "https://maps.app.goo.gl/438ngA9k8XBAnPaQ8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7:30 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "la-boulangerie-hayes-valley",
+        "name": "La Boulangerie",
+        "coordinates": [
+          -122.424196,
+          37.776635
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/la-boulangerie-hayes-valley.jpg",
+        "website": "http://www.laboulangeriesf.com/",
+        "neighborhood": "Hayes Valley",
+        "address": "500 Hayes St",
+        "addressUrl": "https://maps.app.goo.gl/ByCpyQc1tkTWSMYKA",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "jane-on-filmore",
+        "name": "Jane on Filmore",
+        "coordinates": [
+          -122.43387,
+          37.788776
+        ],
+        "description": "gave free smarties :)",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/jane-on-filmore.png",
+        "neighborhood": "Pacific Heights",
+        "address": "2123 Fillmore St",
+        "addressUrl": "https://maps.app.goo.gl/KSV3PMm6smZtYHb47",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 5 PM"
+            }
+          ]
+        }
       }
     ]
   }
