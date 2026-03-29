@@ -1,6 +1,5 @@
 ---
 import "../styles/global.css";
-import "katex/dist/katex.min.css";
 
 const { title = "My Site", fullBleed = false } = Astro.props;
 ---
@@ -14,21 +13,6 @@ const { title = "My Site", fullBleed = false } = Astro.props;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <title>{title}</title>
-    <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"
-    ></script>
-    <script is:inline>
-      document.addEventListener("DOMContentLoaded", () => {
-        const mathElements = document.getElementsByClassName("math");
-        for (let el of mathElements) {
-          katex.render(el.textContent, el, {
-            displayMode: el.classList.contains("display"),
-            throwOnError: false,
-          });
-        }
-      });
-    </script>
   </head>
   <body>
     <header class="navbar">
