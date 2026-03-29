@@ -1,0 +1,2261 @@
+---
+import "leaflet/dist/leaflet.css";
+import type { CoffeeShop, CoffeeShopHoursEntry } from "../data/coffeeShops";
+
+interface Props {
+  title?: string;
+  cityLabel?: string;
+  shops: CoffeeShop[];
+  center?: [number, number];
+  initialBounds?: [[number, number], [number, number]];
+}
+
+const {
+  title = "Favorite Coffee Shops",
+  cityLabel = "San Francisco, California",
+  shops,
+  center = [-122.433, 37.764],
+  initialBounds = [
+    [-122.4326, 37.78215],
+    [-122.4254, 37.78785],
+  ],
+} = Astro.props;
+
+const mapId = "favorite-coffee-map";
+const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const amenityDefinitions = {
+  wifi: {
+    label: "Wifi",
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.7 8.9a14.8 14.8 0 0 1 18.6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M6 12.3a10 10 0 0 1 12 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M9.3 15.7a5.1 5.1 0 0 1 5.4 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><circle cx="12" cy="19" r="1.35" fill="currentColor"/></svg>',
+  },
+  sockets: {
+    label: "Sockets",
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4.8v4.1M14 4.8v4.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/><path d="M8.3 8.9h7.4v3.2a3.7 3.7 0 0 1-7.4 0V8.9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 15.8v1.8a2.9 2.9 0 0 1-2.9 2.9H7.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>',
+  },
+  seating: {
+    label: "Seating",
+    icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.1 6.2h7.8v5.2H8.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.2 11.4h11.6v3.5H6.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 14.9V19M16 14.9V19M5.2 19h13.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  },
+} as const;
+
+const formatDayRange = (days: string[]) => {
+  const indexes = days
+    .map((day) => DAY_ORDER.indexOf(day as (typeof DAY_ORDER)[number]))
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b);
+
+  if (indexes.length === 0) return days.join(", ");
+  if (indexes.length === 1) return DAY_ORDER[indexes[0]];
+
+  const isContiguous = indexes.every((index, offset) =>
+    offset === 0 ? true : index === indexes[offset - 1] + 1,
+  );
+
+  if (isContiguous) {
+    return `${DAY_ORDER[indexes[0]]}-${DAY_ORDER[indexes[indexes.length - 1]]}`;
+  }
+
+  return indexes.map((index) => DAY_ORDER[index]).join(", ");
+};
+
+const formatHoursEntry = (entry: CoffeeShopHoursEntry) =>
+  `${formatDayRange(entry.days)} ${entry.label}`;
+
+const getSidebarMeta = (shop: CoffeeShop) =>
+  [shop.neighborhood].filter(Boolean).join(" • ");
+
+const getVisibleAmenities = (shop: CoffeeShop) =>
+  (
+    Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>
+  ).filter((key) => Boolean(shop.details?.[key]));
+
+const neighborhoodOptions = Array.from(
+  new Set(
+    shops
+      .map((shop) => shop.neighborhood?.trim())
+      .filter((neighborhood): neighborhood is string => Boolean(neighborhood)),
+  ),
+).sort((left, right) => left.localeCompare(right));
+
+const sortedShops = [...shops].sort((left, right) =>
+  left.name.localeCompare(right.name),
+);
+---
+
+<section
+  id="coffee-map"
+  class="coffee-map-section"
+  aria-labelledby="coffee-map-title"
+  data-map-root={mapId}
+  data-center={JSON.stringify(center)}
+  data-initial-bounds={JSON.stringify(initialBounds)}
+  data-amenity-definitions={JSON.stringify(amenityDefinitions)}
+  data-shops={JSON.stringify(shops)}
+>
+  <div class="coffee-map-frame">
+    <div class="coffee-map-canvas" id={mapId} data-map-canvas></div>
+
+    <button
+      class="coffee-sidebar-reopen"
+      type="button"
+      aria-controls="coffee-map-sidebar"
+      aria-label="Open sidebar"
+      data-sidebar-reopen></button>
+
+    <aside
+      id="coffee-map-sidebar"
+      class="coffee-map-sidebar"
+      data-sidebar
+      aria-label="Coffee shop list"
+    >
+      <div class="coffee-map-sidebar__top">
+        <button
+          class="coffee-map-sidebar__sheet-handle"
+          type="button"
+          aria-label="Resize coffee shop list"
+          data-mobile-sheet-handle
+        >
+          <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"></span>
+        </button>
+
+        <div class="coffee-map-sidebar__header">
+          <h2 id="coffee-map-title">{title}</h2>
+          <p class="coffee-map-sidebar__summary" data-filter-summary>
+            {shops.length} {shops.length === 1 ? "shop" : "shops"}
+          </p>
+        </div>
+
+        <div
+          class="coffee-map-sidebar__filters"
+          aria-label="Filter coffee shops"
+        >
+          <details class="coffee-map-filter-group">
+            <summary class="coffee-map-filter-group__summary">
+              <span class="coffee-map-filter-group__label">Amenities</span>
+            </summary>
+            <div class="coffee-map-filter-group__options">
+              {(
+                Object.entries(amenityDefinitions) as Array<
+                  [
+                    keyof typeof amenityDefinitions,
+                    (typeof amenityDefinitions)[keyof typeof amenityDefinitions],
+                  ]
+                >
+              ).map(([amenity, definition]) => (
+                <button
+                  class="coffee-map-filter coffee-map-filter--amenity"
+                  type="button"
+                  data-amenity-filter={amenity}
+                  aria-pressed="false"
+                  aria-label={`Filter by ${definition.label.toLowerCase()}`}
+                  title={`Filter by ${definition.label.toLowerCase()}`}
+                >
+                  <span
+                    class="coffee-map-filter__icon"
+                    set:html={definition.icon}
+                  />
+                  <span class="coffee-map-filter__label">{definition.label}</span>
+                </button>
+              ))}
+            </div>
+          </details>
+
+          {neighborhoodOptions.length > 0 && (
+            <details class="coffee-map-filter-group">
+              <summary class="coffee-map-filter-group__summary">
+                <span class="coffee-map-filter-group__label">Neighborhood</span>
+              </summary>
+              <div class="coffee-map-filter-group__options">
+                {neighborhoodOptions.map((neighborhood) => (
+                  <button
+                    class="coffee-map-filter"
+                    type="button"
+                    data-neighborhood-filter={neighborhood}
+                    aria-pressed="false"
+                  >
+                    {neighborhood}
+                  </button>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      </div>
+
+      <div class="coffee-map-sidebar__list" data-shop-list>
+        {
+          sortedShops.map((shop) => (
+            <button
+              class="coffee-shop-item"
+              type="button"
+              data-shop-item
+              data-shop-id={shop.id}
+              style={`--shop-accent: ${shop.accent};`}
+            >
+              <span class="coffee-shop-item__badge has-logo">
+                <img
+                  class="coffee-shop-item__badge-image"
+                  src={shop.logoPath}
+                  alt=""
+                  loading="lazy"
+                />
+              </span>
+              <span class="coffee-shop-item__text">
+                <span class="coffee-shop-item__top">
+                  <span class="coffee-shop-item__identity">
+                    <span class="coffee-shop-item__name">{shop.name}</span>
+                    {getSidebarMeta(shop) && (
+                      <span class="coffee-shop-item__meta">
+                        {getSidebarMeta(shop)}
+                      </span>
+                    )}
+                  </span>
+                  {getVisibleAmenities(shop).length > 0 && (
+                    <span class="coffee-shop-item__chips">
+                      {getVisibleAmenities(shop).map((amenity) => (
+                        <span
+                          class="coffee-shop-chip"
+                          aria-label={amenityDefinitions[amenity].label}
+                          title={amenityDefinitions[amenity].label}
+                        >
+                          <span
+                            class="coffee-shop-chip__icon"
+                            set:html={amenityDefinitions[amenity].icon}
+                          />
+                          <span class="sr-only">
+                            {amenityDefinitions[amenity].label}
+                          </span>
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </span>
+                {shop.address && (
+                  <span class="coffee-shop-item__address">{shop.address}</span>
+                )}
+              </span>
+            </button>
+          ))
+        }
+      </div>
+
+      <div
+        class="coffee-sidebar-edge"
+        role="separator"
+        aria-controls="coffee-map-sidebar"
+        aria-label="Resize sidebar"
+        aria-orientation="vertical"
+        tabindex="0"
+        data-sidebar-resizer
+      >
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+  import L from "leaflet";
+
+  const root = document.querySelector('[data-map-root="favorite-coffee-map"]');
+
+  if (root instanceof HTMLElement) {
+    const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const amenityDefinitions = JSON.parse(
+      root.dataset.amenityDefinitions ?? "{}",
+    );
+    const shops = JSON.parse(root.dataset.shops ?? "[]");
+    const center = JSON.parse(root.dataset.center ?? "[-122.433, 37.764]");
+    const initialBounds = JSON.parse(
+      root.dataset.initialBounds ??
+        "[[-122.4326, 37.78215], [-122.4254, 37.78785]]",
+    );
+    const mapContainer = root.querySelector("[data-map-canvas]");
+    const sidebar = root.querySelector("[data-sidebar]");
+    const sidebarResizer = root.querySelector("[data-sidebar-resizer]");
+    const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
+    const mobileSheetHandle = root.querySelector("[data-mobile-sheet-handle]");
+    const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
+    const amenityFilterButtons = Array.from(
+      root.querySelectorAll("[data-amenity-filter]"),
+    );
+    const neighborhoodFilterButtons = Array.from(
+      root.querySelectorAll("[data-neighborhood-filter]"),
+    );
+    const filterSummary = root.querySelector("[data-filter-summary]");
+
+    if (
+      mapContainer instanceof HTMLElement &&
+      sidebar instanceof HTMLElement &&
+      sidebarResizer instanceof HTMLElement &&
+      sidebarReopen instanceof HTMLButtonElement &&
+      mapContainer.dataset.initialized !== "true"
+    ) {
+      mapContainer.dataset.initialized = "true";
+
+      const tileUrl =
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+      const DEFAULT_SIDEBAR_WIDTH = 352;
+      const MIN_SIDEBAR_WIDTH = 248;
+      const MAX_SIDEBAR_WIDTH = 448;
+      const HIDE_SIDEBAR_THRESHOLD = 180;
+      const INITIAL_VIEW_ZOOM = 13;
+      const INITIAL_VIEW_MAX_ZOOM = 14;
+      const MOBILE_INITIAL_VIEW_MAX_ZOOM = 12;
+      const MOBILE_SHEET_MIN_HEIGHT = 86;
+      const MOBILE_SHEET_DEFAULT_HEIGHT = 128;
+      let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
+      let currentMobileSheetHeight = MOBILE_SHEET_DEFAULT_HEIGHT;
+
+      const map = L.map(mapContainer, {
+        center: [center[1], center[0]],
+        zoom: INITIAL_VIEW_ZOOM,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        keyboard: false,
+        zoomSnap: 1,
+        zoomDelta: 1,
+        minZoom: 9,
+        zoomAnimation: true,
+        zoomAnimationThreshold: 1,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
+      });
+
+      L.control
+        .attribution({
+          position: "bottomleft",
+          prefix: false,
+        })
+        .addTo(map);
+      L.tileLayer(tileUrl, {
+        subdomains: "abcd",
+        maxZoom: 20,
+        detectRetina: true,
+        keepBuffer: 8,
+        updateWhenZooming: true,
+        updateInterval: 120,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      }).addTo(map);
+
+      const clampZoom = (zoom) =>
+        Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
+      const PINCH_ZOOM_STEP = 1;
+      const PINCH_THRESHOLD = 80;
+      const TRACKPAD_WHEEL_THRESHOLD = 36;
+      let pinchDelta = 0;
+      let pinchResetTimer = null;
+      let pinchGestureConsumed = false;
+      let trackpadWheelDelta = 0;
+      let trackpadWheelResetTimer = null;
+      let trackpadWheelGestureConsumed = false;
+      let queuedZoomSteps = 0;
+      let queuedZoomPoint = null;
+      let isQueuedZoomActive = false;
+
+      const processQueuedZoom = () => {
+        if (isQueuedZoomActive || queuedZoomSteps === 0) return;
+
+        const direction = Math.sign(queuedZoomSteps);
+        const nextZoom = clampZoom(map.getZoom() + direction * PINCH_ZOOM_STEP);
+
+        queuedZoomSteps -= direction;
+
+        if (nextZoom === map.getZoom()) {
+          queuedZoomSteps = 0;
+          return;
+        }
+
+        isQueuedZoomActive = true;
+        map.setZoomAround(
+          queuedZoomPoint ?? map.getSize().divideBy(2),
+          nextZoom,
+        );
+      };
+
+      map.on("zoomend", () => {
+        if (!isQueuedZoomActive) return;
+
+        isQueuedZoomActive = false;
+
+        if (queuedZoomSteps !== 0) {
+          processQueuedZoom();
+        }
+      });
+
+      const getWheelPoint = (event) => {
+        const rect = mapContainer.getBoundingClientRect();
+        return L.point(event.clientX - rect.left, event.clientY - rect.top);
+      };
+
+      const queueZoomFromWheel = (steps, containerPoint) => {
+        if (steps === 0) return;
+
+        queuedZoomSteps = Math.sign(steps);
+        queuedZoomPoint = containerPoint;
+        processQueuedZoom();
+      };
+
+      const isTrackpadWheelGesture = (event) =>
+        event.deltaMode === WheelEvent.DOM_DELTA_PIXEL &&
+        Math.abs(event.deltaY) > 0 &&
+        Math.abs(event.deltaY) < 80 &&
+        Math.abs(event.deltaX) < 80;
+
+      const handleTrackpadPinchZoom = (event) => {
+        // Trackpad pinch gestures surface as ctrl+wheel on desktop browsers.
+        if (!event.ctrlKey) return false;
+
+        event.preventDefault();
+
+        const containerPoint = getWheelPoint(event);
+        const nextDelta = pinchDelta - event.deltaY;
+        const steps = Math.trunc(nextDelta / PINCH_THRESHOLD);
+
+        pinchDelta = nextDelta;
+
+        if (steps !== 0 && !pinchGestureConsumed) {
+          pinchDelta -= steps * PINCH_THRESHOLD;
+          pinchGestureConsumed = true;
+          queueZoomFromWheel(steps, containerPoint);
+        }
+
+        window.clearTimeout(pinchResetTimer ?? undefined);
+        pinchResetTimer = window.setTimeout(() => {
+          pinchDelta = 0;
+          pinchGestureConsumed = false;
+          pinchResetTimer = null;
+        }, 140);
+
+        return true;
+      };
+
+      const handleTrackpadWheelZoom = (event) => {
+        if (event.ctrlKey || !isTrackpadWheelGesture(event)) return false;
+
+        event.preventDefault();
+
+        const containerPoint = getWheelPoint(event);
+        const nextDelta = trackpadWheelDelta - event.deltaY;
+        const steps = Math.trunc(nextDelta / TRACKPAD_WHEEL_THRESHOLD);
+
+        trackpadWheelDelta = nextDelta;
+
+        if (steps !== 0 && !trackpadWheelGestureConsumed) {
+          trackpadWheelDelta -= steps * TRACKPAD_WHEEL_THRESHOLD;
+          trackpadWheelGestureConsumed = true;
+          queueZoomFromWheel(steps, containerPoint);
+        }
+
+        window.clearTimeout(trackpadWheelResetTimer ?? undefined);
+        trackpadWheelResetTimer = window.setTimeout(() => {
+          trackpadWheelDelta = 0;
+          trackpadWheelGestureConsumed = false;
+          trackpadWheelResetTimer = null;
+        }, 320);
+
+        return true;
+      };
+
+      const handleMouseWheelZoom = (event) => {
+        if (
+          event.ctrlKey ||
+          isTrackpadWheelGesture(event) ||
+          event.deltaY === 0
+        ) {
+          return false;
+        }
+
+        event.preventDefault();
+
+        queueZoomFromWheel(-Math.sign(event.deltaY), getWheelPoint(event));
+        return true;
+      };
+
+      const handleWheelZoom = (event) => {
+        if (handleTrackpadPinchZoom(event)) return;
+        if (handleTrackpadWheelZoom(event)) return;
+        if (!handleMouseWheelZoom(event)) return;
+
+        event.stopPropagation();
+      };
+
+      mapContainer.addEventListener("wheel", handleWheelZoom, {
+        capture: true,
+        passive: false,
+      });
+
+      const markerElements = new Map();
+      const markersById = new Map();
+      const listItemsById = new Map(
+        listItems
+          .filter((item) => item instanceof HTMLElement && item.dataset.shopId)
+          .map((item) => [item.dataset.shopId, item]),
+      );
+      const shopsById = new Map(shops.map((shop) => [shop.id, shop]));
+      const activeAmenityFilters = new Set();
+      const activeNeighborhoodFilters = new Set();
+      let visibleShopIds = new Set(shops.map((shop) => shop.id));
+      let activeShopId = null;
+      const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
+      const isSidebarHidden = () =>
+        root.classList.contains("is-sidebar-hidden");
+      const getMobileSheetMaxHeight = () => {
+        const frameHeight =
+          root.getBoundingClientRect().height || window.innerHeight;
+
+        return Math.max(
+          MOBILE_SHEET_MIN_HEIGHT,
+          Math.min(frameHeight - 24, Math.round(frameHeight * 0.82)),
+        );
+      };
+      const getMobileSheetMidHeight = () =>
+        Math.min(
+          getMobileSheetMaxHeight(),
+          Math.max(240, Math.round(getMobileSheetMaxHeight() * 0.5)),
+        );
+      const clampMobileSheetHeight = (height) =>
+        Math.min(
+          getMobileSheetMaxHeight(),
+          Math.max(MOBILE_SHEET_MIN_HEIGHT, height),
+        );
+      const syncMobileSheetHeight = () => {
+        currentMobileSheetHeight = clampMobileSheetHeight(
+          currentMobileSheetHeight,
+        );
+        root.style.setProperty(
+          "--mobile-sheet-visible-height",
+          `${currentMobileSheetHeight}px`,
+        );
+        root.style.setProperty(
+          "--mobile-sheet-max-height",
+          `${getMobileSheetMaxHeight()}px`,
+        );
+      };
+      const setMobileSheetHeight = (height) => {
+        currentMobileSheetHeight = clampMobileSheetHeight(height);
+        syncMobileSheetHeight();
+      };
+      const snapMobileSheet = (target = "nearest") => {
+        const snapPoints = [
+          MOBILE_SHEET_MIN_HEIGHT,
+          getMobileSheetMidHeight(),
+          getMobileSheetMaxHeight(),
+        ];
+
+        if (target === "collapsed") {
+          setMobileSheetHeight(snapPoints[0]);
+          return;
+        }
+
+        if (target === "mid") {
+          setMobileSheetHeight(snapPoints[1]);
+          return;
+        }
+
+        if (target === "expanded") {
+          setMobileSheetHeight(snapPoints[2]);
+          return;
+        }
+
+        const nextHeight = snapPoints.reduce((closest, point) =>
+          Math.abs(point - currentMobileSheetHeight) <
+          Math.abs(closest - currentMobileSheetHeight)
+            ? point
+            : closest,
+        );
+
+        setMobileSheetHeight(nextHeight);
+      };
+      const getSidebarMaxWidth = () =>
+        Math.max(
+          MIN_SIDEBAR_WIDTH,
+          Math.min(MAX_SIDEBAR_WIDTH, window.innerWidth - 48),
+        );
+      const clampSidebarWidth = (width) =>
+        Math.min(getSidebarMaxWidth(), Math.max(MIN_SIDEBAR_WIDTH, width));
+      const syncSidebarWidth = () => {
+        const width = clampSidebarWidth(currentSidebarWidth);
+
+        currentSidebarWidth = width;
+        root.style.setProperty("--sidebar-width", `${width}px`);
+        sidebarResizer.setAttribute("aria-valuemin", String(MIN_SIDEBAR_WIDTH));
+        sidebarResizer.setAttribute(
+          "aria-valuemax",
+          String(getSidebarMaxWidth()),
+        );
+        sidebarResizer.setAttribute("aria-valuenow", String(Math.round(width)));
+      };
+      const syncSidebarVisibility = () => {
+        const hidden = !isCompact() && isSidebarHidden();
+        sidebar.setAttribute("aria-hidden", String(hidden));
+        sidebarReopen.setAttribute("aria-hidden", String(!hidden));
+      };
+      const showSidebar = () => {
+        if (isCompact()) {
+          snapMobileSheet("mid");
+          return;
+        }
+
+        if (isSidebarHidden()) {
+          currentSidebarWidth = Math.max(
+            currentSidebarWidth,
+            DEFAULT_SIDEBAR_WIDTH,
+          );
+        }
+
+        root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
+        syncSidebarWidth();
+        syncSidebarVisibility();
+      };
+      const hideSidebar = () => {
+        if (isCompact()) {
+          snapMobileSheet("collapsed");
+          return;
+        }
+        root.classList.remove("is-sidebar-collapsing");
+        root.classList.add("is-sidebar-hidden");
+        syncSidebarVisibility();
+      };
+
+      const getPadding = () => {
+        if (isCompact()) {
+          return {
+            top: 24,
+            right: 24,
+            bottom: currentMobileSheetHeight + 24,
+            left: 24,
+          };
+        }
+
+        if (isSidebarHidden()) {
+          return { top: 28, right: 28, bottom: 28, left: 28 };
+        }
+
+        return {
+          top: 56,
+          right: 56,
+          bottom: 56,
+          left: currentSidebarWidth + 40,
+        };
+      };
+
+      const fitToInitialBounds = (duration) => {
+        const padding = getPadding();
+        const mobileBounds = [
+          [center[0] - 0.05, center[1] - 0.042],
+          [center[0] + 0.05, center[1] + 0.042],
+        ];
+        const [southWest, northEast] = isCompact()
+          ? mobileBounds
+          : initialBounds;
+
+        map.fitBounds(
+          [
+            [southWest[1], southWest[0]],
+            [northEast[1], northEast[0]],
+          ],
+          {
+            paddingTopLeft: [padding.left, padding.top],
+            paddingBottomRight: [padding.right, padding.bottom],
+            maxZoom: isCompact()
+              ? MOBILE_INITIAL_VIEW_MAX_ZOOM
+              : INITIAL_VIEW_MAX_ZOOM,
+            animate: duration > 0,
+          },
+        );
+      };
+
+      const activePopup = L.popup({
+        closeButton: false,
+        autoClose: false,
+        closeOnClick: false,
+        autoPan: false,
+        className: "coffee-map-popup",
+        offset: [0, -26],
+      });
+
+      const getVisibleAmenities = (shop) =>
+        Object.keys(amenityDefinitions).filter((key) =>
+          Boolean(shop.details?.[key]),
+        );
+      const matchesFilters = (shop) => {
+        const matchesAmenities = Array.from(activeAmenityFilters).every(
+          (amenity) => Boolean(shop.details?.[amenity]),
+        );
+        const neighborhood = shop.neighborhood?.trim();
+        const matchesNeighborhoods =
+          activeNeighborhoodFilters.size === 0 ||
+          (Boolean(neighborhood) &&
+            activeNeighborhoodFilters.has(neighborhood));
+
+        return matchesAmenities && matchesNeighborhoods;
+      };
+      const syncFilterSummary = (count) => {
+        if (!(filterSummary instanceof HTMLElement)) return;
+
+        const filtersActive =
+          activeAmenityFilters.size > 0 || activeNeighborhoodFilters.size > 0;
+        const noun = count === 1 ? "shop" : "shops";
+
+        filterSummary.textContent = filtersActive
+          ? `${count} ${noun} match`
+          : `${count} ${noun}`;
+      };
+      const syncFilterButtons = () => {
+        for (const button of amenityFilterButtons) {
+          const amenity = button.dataset.amenityFilter;
+          const isActive = Boolean(
+            amenity && activeAmenityFilters.has(amenity),
+          );
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        }
+
+        for (const button of neighborhoodFilterButtons) {
+          const neighborhood = button.dataset.neighborhoodFilter;
+          const isActive = Boolean(
+            neighborhood && activeNeighborhoodFilters.has(neighborhood),
+          );
+
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-pressed", String(isActive));
+        }
+      };
+      const applyFilters = () => {
+        const nextVisibleShopIds = new Set();
+
+        for (const shop of shops) {
+          const isVisible = matchesFilters(shop);
+          const listItem = listItemsById.get(shop.id);
+          const marker = markersById.get(shop.id);
+          const markerNode = marker?.getElement();
+
+          if (listItem instanceof HTMLElement) {
+            listItem.hidden = !isVisible;
+          }
+
+          if (markerNode instanceof HTMLElement) {
+            markerNode.classList.toggle("is-filtered-out", !isVisible);
+          }
+
+          if (isVisible) {
+            nextVisibleShopIds.add(shop.id);
+          }
+        }
+
+        visibleShopIds = nextVisibleShopIds;
+
+        if (
+          activeShopId &&
+          !visibleShopIds.has(activeShopId) &&
+          shopsById.has(activeShopId)
+        ) {
+          clearActiveShop();
+        }
+
+        syncFilterSummary(visibleShopIds.size);
+        syncFilterButtons();
+      };
+
+      const formatDayRange = (days) => {
+        const indexes = days
+          .map((day) => DAY_ORDER.indexOf(day))
+          .filter((index) => index >= 0)
+          .sort((a, b) => a - b);
+
+        if (indexes.length === 0) return days.join(", ");
+        if (indexes.length === 1) return DAY_ORDER[indexes[0]];
+
+        const isContiguous = indexes.every((index, offset) =>
+          offset === 0 ? true : index === indexes[offset - 1] + 1,
+        );
+
+        if (isContiguous) {
+          return (
+            DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]]
+          );
+        }
+
+        return indexes.map((index) => DAY_ORDER[index]).join(", ");
+      };
+
+      const formatHoursEntries = (hours) =>
+        Array.isArray(hours)
+          ? hours
+              .map(
+                (entry) =>
+                  formatDayRange(entry.days || []) + " " + (entry.label || ""),
+              )
+              .filter((entry) => entry.trim())
+          : [];
+
+      const appendShopIdentity = (container, shop, imageClassName) => {
+        const image = document.createElement("img");
+        image.className = imageClassName;
+        image.src = shop.logoPath;
+        image.alt = "";
+        container.classList.add("has-logo");
+        container.append(image);
+      };
+
+      const createAmenityChip = (kind) => {
+        const definition = amenityDefinitions?.[kind];
+        if (!definition) return null;
+
+        const chip = document.createElement("span");
+        chip.className = "coffee-shop-chip";
+        chip.setAttribute("aria-label", definition.label);
+        chip.title = definition.label;
+
+        const icon = document.createElement("span");
+        icon.className = "coffee-shop-chip__icon";
+        icon.innerHTML = definition.icon;
+        chip.append(icon);
+
+        const srText = document.createElement("span");
+        srText.className = "sr-only";
+        srText.textContent = definition.label;
+        chip.append(srText);
+
+        return chip;
+      };
+
+      const createPopupContent = (shop) => {
+        const popupContent = document.createElement("article");
+        popupContent.className = "coffee-map-popup__content";
+        popupContent.style.setProperty("--popup-accent", shop.accent);
+
+        const popupBody = document.createElement("div");
+        popupBody.className = "coffee-map-popup__body";
+
+        const popupHeader = document.createElement("div");
+        popupHeader.className = "coffee-map-popup__header";
+
+        const popupHeading = document.createElement("div");
+        popupHeading.className = "coffee-map-popup__heading";
+
+        const popupTitleRow = document.createElement("div");
+        popupTitleRow.className = "coffee-map-popup__title-row";
+
+        const popupTitle = document.createElement("h3");
+        popupTitle.textContent = shop.name;
+        popupTitleRow.append(popupTitle);
+
+        popupHeading.append(popupTitleRow);
+
+        if (shop.neighborhood) {
+          const popupNeighborhood = document.createElement("p");
+          popupNeighborhood.className = "coffee-map-popup__neighborhood";
+          popupNeighborhood.textContent = shop.neighborhood;
+          popupHeading.append(popupNeighborhood);
+        }
+
+        popupHeader.append(popupHeading);
+
+        popupBody.append(popupHeader);
+
+        const popupDetails = document.createElement("div");
+        popupDetails.className = "coffee-map-popup__details";
+
+        if (shop.description) {
+          const popupDescription = document.createElement("p");
+          popupDescription.className = "coffee-map-popup__description";
+          popupDescription.textContent = shop.description;
+          popupDetails.append(popupDescription);
+        }
+
+        if (
+          Array.isArray(shop.details?.hours) &&
+          shop.details.hours.length > 0
+        ) {
+          const popupHours = document.createElement("div");
+          popupHours.className = "coffee-map-popup__schedule";
+
+          formatHoursEntries(shop.details.hours).forEach((entry) => {
+            const popupHoursLine = document.createElement("p");
+            popupHoursLine.className = "coffee-map-popup__schedule-line";
+            popupHoursLine.textContent = entry;
+            popupHours.append(popupHoursLine);
+          });
+
+          popupDetails.append(popupHours);
+        }
+
+        const amenities = getVisibleAmenities(shop);
+        const popupAmenities = document.createElement("div");
+        popupAmenities.className = "coffee-map-popup__amenities";
+
+        amenities.forEach((amenity) => {
+          const chip = createAmenityChip(amenity);
+          if (chip) {
+            popupAmenities.append(chip);
+          }
+        });
+
+        if (amenities.length > 0) {
+          popupHeader.append(popupAmenities);
+        }
+
+        if (popupDetails.childElementCount > 0) {
+          popupBody.append(popupDetails);
+        }
+        popupContent.append(popupBody);
+
+        const popupLinks = [];
+
+        if (shop.website) {
+          const popupWebsite = document.createElement("a");
+          popupWebsite.className = "coffee-map-popup__text-link";
+          popupWebsite.href = shop.website;
+          popupWebsite.target = "_blank";
+          popupWebsite.rel = "noreferrer";
+          popupWebsite.textContent = "Website";
+          popupLinks.push(popupWebsite);
+        }
+
+        if (shop.address) {
+          const popupAddress = document.createElement(
+            shop.addressUrl ? "a" : "span",
+          );
+          popupAddress.className = shop.addressUrl
+            ? "coffee-map-popup__address coffee-map-popup__text-link"
+            : "coffee-map-popup__address";
+
+          if (popupAddress instanceof HTMLAnchorElement) {
+            popupAddress.href = shop.addressUrl;
+            popupAddress.target = "_blank";
+            popupAddress.rel = "noreferrer";
+          }
+
+          popupAddress.textContent = shop.address;
+          popupLinks.push(popupAddress);
+        }
+
+        if (popupLinks.length > 0) {
+          const popupLinksRow = document.createElement("div");
+          popupLinksRow.className = "coffee-map-popup__links";
+
+          const leftLink = popupLinks.find(
+            (link) => link.textContent === "Website",
+          );
+          const rightLink = popupLinks.find(
+            (link) => link.textContent !== "Website",
+          );
+
+          if (leftLink) {
+            popupLinksRow.append(leftLink);
+          } else {
+            const spacer = document.createElement("span");
+            spacer.className = "coffee-map-popup__spacer";
+            popupLinksRow.append(spacer);
+          }
+
+          if (rightLink) {
+            popupLinksRow.append(rightLink);
+          }
+
+          popupContent.append(popupLinksRow);
+        }
+
+        return popupContent;
+      };
+
+      const centerOnShop = (shop) => {
+        const targetLatLng = L.latLng(shop.coordinates[1], shop.coordinates[0]);
+        const zoom = map.getZoom();
+
+        if (isCompact()) {
+          const topPadding = 24;
+          const bottomPadding = currentMobileSheetHeight + 24;
+          const projectedPoint = map.project(targetLatLng, zoom);
+          const offsetPoint = L.point(
+            0,
+            (topPadding - bottomPadding) / 2,
+          );
+          const centeredLatLng = map.unproject(
+            projectedPoint.subtract(offsetPoint),
+            zoom,
+          );
+
+          map.flyTo(centeredLatLng, zoom, {
+            animate: true,
+            duration: 0.85,
+          });
+          return;
+        }
+
+        const padding = getPadding();
+        const projectedPoint = map.project(targetLatLng, zoom);
+        const offsetPoint = L.point(
+          (padding.left - padding.right) / 2,
+          (padding.top - padding.bottom) / 2,
+        );
+        const centeredLatLng = map.unproject(
+          projectedPoint.subtract(offsetPoint),
+          zoom,
+        );
+
+        map.flyTo(centeredLatLng, zoom, {
+          animate: true,
+          duration: 0.85,
+        });
+      };
+
+      const clearActiveShop = () => {
+        activeShopId = null;
+
+        markerElements.forEach((markerElement) => {
+          markerElement.classList.remove("is-active");
+        });
+
+        for (const item of listItems) {
+          item.classList.remove("is-active");
+        }
+
+        if (map.hasLayer(activePopup)) {
+          map.removeLayer(activePopup);
+        }
+      };
+
+      const setActiveShop = (shop, options = {}) => {
+        const { revealSidebar = false, centerMap = false } = options;
+        if (!visibleShopIds.has(shop.id)) return;
+
+        if (activeShopId === shop.id) {
+          clearActiveShop();
+          return;
+        }
+
+        if (revealSidebar) {
+          showSidebar();
+        }
+
+        if (centerMap) {
+          centerOnShop(shop);
+        }
+
+        activeShopId = shop.id;
+
+        markerElements.forEach((markerElement, shopId) => {
+          markerElement.classList.toggle("is-active", shopId === shop.id);
+        });
+
+        const activeMarker = markersById.get(shop.id);
+        if (activeMarker) {
+          activePopup
+            .setLatLng([shop.coordinates[1], shop.coordinates[0]])
+            .setContent(createPopupContent(shop));
+
+          if (!map.hasLayer(activePopup)) {
+            activePopup.addTo(map);
+          }
+        }
+
+        for (const item of listItems) {
+          const isActive =
+            item instanceof HTMLElement && item.dataset.shopId === shop.id;
+          item.classList.toggle("is-active", isActive);
+          if (isActive && !isCompact()) {
+            item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            if (revealSidebar) {
+              requestAnimationFrame(() => item.focus({ preventScroll: true }));
+            }
+          }
+        }
+      };
+
+      map.on("click", () => {
+        if (activeShopId) {
+          clearActiveShop();
+        }
+      });
+
+      const createMarkerElement = (shop) => {
+        const markerElement = document.createElement("button");
+        markerElement.type = "button";
+        markerElement.className = "coffee-marker";
+        markerElement.setAttribute("aria-label", shop.name);
+        markerElement.style.setProperty("--marker-accent", shop.accent);
+
+        const halo = document.createElement("span");
+        halo.className = "coffee-marker__halo";
+
+        const core = document.createElement("span");
+        core.className = "coffee-marker__core";
+        appendShopIdentity(core, shop, "coffee-marker__logo");
+
+        markerElement.classList.add("has-logo");
+        core.classList.add("has-logo");
+
+        markerElement.append(halo, core);
+        return markerElement;
+      };
+
+      const addMarkers = () => {
+        for (const shop of shops) {
+          const markerElement = createMarkerElement(shop);
+
+          const marker = L.marker([shop.coordinates[1], shop.coordinates[0]], {
+            title: shop.name,
+            alt: shop.name,
+            keyboard: false,
+            riseOnHover: true,
+            icon: L.divIcon({
+              html: markerElement.outerHTML,
+              className: "coffee-marker-wrapper",
+              iconSize: [54, 54],
+              iconAnchor: [27, 27],
+            }),
+          })
+            .addTo(map)
+            .on("click", () => setActiveShop(shop));
+
+          markersById.set(shop.id, marker);
+
+          const liveMarker = marker
+            .getElement()
+            ?.querySelector(".coffee-marker");
+          if (liveMarker instanceof HTMLElement) {
+            markerElements.set(shop.id, liveMarker);
+          }
+        }
+
+        applyFilters();
+      };
+
+      for (const item of listItems) {
+        item.addEventListener("click", () => {
+          const shop = shopsById.get(item.dataset.shopId);
+          if (shop) {
+            setActiveShop(shop, { revealSidebar: true, centerMap: true });
+          }
+        });
+      }
+
+      for (const button of amenityFilterButtons) {
+        button.addEventListener("click", () => {
+          const amenity = button.dataset.amenityFilter;
+          if (!amenity) return;
+
+          if (activeAmenityFilters.has(amenity)) {
+            activeAmenityFilters.delete(amenity);
+          } else {
+            activeAmenityFilters.add(amenity);
+          }
+
+          applyFilters();
+        });
+      }
+
+      for (const button of neighborhoodFilterButtons) {
+        button.addEventListener("click", () => {
+          const neighborhood = button.dataset.neighborhoodFilter;
+          if (!neighborhood) return;
+
+          if (activeNeighborhoodFilters.has(neighborhood)) {
+            activeNeighborhoodFilters.delete(neighborhood);
+          } else {
+            activeNeighborhoodFilters.add(neighborhood);
+          }
+
+          applyFilters();
+        });
+      }
+
+      syncSidebarWidth();
+      syncMobileSheetHeight();
+      syncSidebarVisibility();
+      syncFilterButtons();
+
+      let activePointerId = null;
+      let dragStartX = 0;
+      let dragStartWidth = currentSidebarWidth;
+      let dragCurrentWidth = currentSidebarWidth;
+      let activeMobileSheetPointerId = null;
+      let mobileSheetDragStartY = 0;
+      let mobileSheetDragStartHeight = currentMobileSheetHeight;
+      let mobileSheetDragCurrentHeight = currentMobileSheetHeight;
+      let mobileSheetWasDragged = false;
+
+      const resizeSidebar = (nextWidth) => {
+        currentSidebarWidth = clampSidebarWidth(nextWidth);
+        syncSidebarWidth();
+      };
+
+      const stopResizingSidebar = () => {
+        if (activePointerId === null) return;
+
+        if (dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD) {
+          hideSidebar();
+        } else {
+          root.classList.remove("is-sidebar-collapsing");
+        }
+
+        root.classList.remove("is-resizing-sidebar");
+        sidebarResizer.releasePointerCapture(activePointerId);
+        activePointerId = null;
+      };
+
+      sidebarResizer.addEventListener("pointerdown", (event) => {
+        if (isCompact() || isSidebarHidden() || event.button !== 0) return;
+
+        activePointerId = event.pointerId;
+        dragStartX = event.clientX;
+        dragStartWidth = currentSidebarWidth;
+        dragCurrentWidth = currentSidebarWidth;
+        root.classList.add("is-resizing-sidebar");
+        sidebarResizer.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      sidebarResizer.addEventListener("pointermove", (event) => {
+        if (activePointerId !== event.pointerId) return;
+
+        dragCurrentWidth = dragStartWidth + (event.clientX - dragStartX);
+        root.classList.toggle(
+          "is-sidebar-collapsing",
+          dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD,
+        );
+
+        if (dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD) {
+          resizeSidebar(MIN_SIDEBAR_WIDTH);
+          return;
+        }
+
+        resizeSidebar(dragCurrentWidth);
+      });
+
+      sidebarResizer.addEventListener("pointerup", stopResizingSidebar);
+      sidebarResizer.addEventListener("pointercancel", stopResizingSidebar);
+
+      sidebarResizer.addEventListener("keydown", (event) => {
+        if (isCompact()) return;
+
+        if (event.key === "ArrowLeft") {
+          if (currentSidebarWidth - 24 <= HIDE_SIDEBAR_THRESHOLD) {
+            hideSidebar();
+          } else {
+            resizeSidebar(currentSidebarWidth - 24);
+          }
+          event.preventDefault();
+        }
+
+        if (event.key === "ArrowRight") {
+          showSidebar();
+          resizeSidebar(currentSidebarWidth + 24);
+          event.preventDefault();
+        }
+      });
+
+      sidebarReopen.addEventListener("click", () => {
+        showSidebar();
+        map.invalidateSize();
+      });
+
+      const stopResizingMobileSheet = () => {
+        if (activeMobileSheetPointerId === null) return;
+
+        if (mobileSheetHandle instanceof HTMLElement) {
+          mobileSheetHandle.releasePointerCapture(activeMobileSheetPointerId);
+        }
+
+        root.classList.remove("is-resizing-mobile-sheet");
+        activeMobileSheetPointerId = null;
+        snapMobileSheet();
+      };
+
+      mobileSheetHandle?.addEventListener("pointerdown", (event) => {
+        if (!isCompact() || event.button !== 0) return;
+
+        activeMobileSheetPointerId = event.pointerId;
+        mobileSheetDragStartY = event.clientY;
+        mobileSheetDragStartHeight = currentMobileSheetHeight;
+        mobileSheetDragCurrentHeight = currentMobileSheetHeight;
+        mobileSheetWasDragged = false;
+        root.classList.add("is-resizing-mobile-sheet");
+        mobileSheetHandle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      mobileSheetHandle?.addEventListener("pointermove", (event) => {
+        if (activeMobileSheetPointerId !== event.pointerId || !isCompact()) {
+          return;
+        }
+
+        if (Math.abs(event.clientY - mobileSheetDragStartY) > 6) {
+          mobileSheetWasDragged = true;
+        }
+
+        mobileSheetDragCurrentHeight =
+          mobileSheetDragStartHeight - (event.clientY - mobileSheetDragStartY);
+        setMobileSheetHeight(mobileSheetDragCurrentHeight);
+      });
+
+      mobileSheetHandle?.addEventListener("pointerup", stopResizingMobileSheet);
+      mobileSheetHandle?.addEventListener(
+        "pointercancel",
+        stopResizingMobileSheet,
+      );
+      mobileSheetHandle?.addEventListener("click", () => {
+        if (
+          !isCompact() ||
+          activeMobileSheetPointerId !== null ||
+          mobileSheetWasDragged
+        ) {
+          mobileSheetWasDragged = false;
+          return;
+        }
+
+        const nextTarget =
+          currentMobileSheetHeight <= MOBILE_SHEET_MIN_HEIGHT + 12
+            ? "mid"
+            : "collapsed";
+        snapMobileSheet(nextTarget);
+      });
+
+      const resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+
+      resizeObserver.observe(mapContainer);
+      window.addEventListener("resize", () => {
+        if (isCompact()) {
+          root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
+          syncMobileSheetHeight();
+        } else {
+          currentMobileSheetHeight = MOBILE_SHEET_DEFAULT_HEIGHT;
+        }
+        syncSidebarWidth();
+        syncSidebarVisibility();
+        map.invalidateSize();
+      });
+      window.addEventListener("pagehide", () => {
+        resizeObserver.disconnect();
+        window.clearTimeout(pinchResetTimer ?? undefined);
+        window.clearTimeout(trackpadWheelResetTimer ?? undefined);
+        map.remove();
+      });
+
+      map.whenReady(() => {
+        addMarkers();
+
+        fitToInitialBounds(0);
+        requestAnimationFrame(() => map.invalidateSize());
+        requestAnimationFrame(() => fitToInitialBounds(1600));
+      });
+    }
+  }
+</script>
+
+<style is:global>
+  .coffee-map-section {
+    --sidebar-width: 22rem;
+    --shop-list-inline-gap: 0.7rem;
+    --mobile-sheet-visible-height: 8rem;
+    --mobile-sheet-max-height: 32rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .coffee-map-frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    border-top: 1px solid #e5e5e5;
+    background: #fff;
+  }
+
+  .coffee-map-canvas {
+    position: absolute;
+    inset: 0;
+    overscroll-behavior: contain;
+  }
+
+  .coffee-map-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: min(var(--sidebar-width), calc(100vw - 3rem));
+    padding: 1rem;
+    background: rgba(249, 249, 249, 0.94);
+    border-right: 1px solid rgba(229, 229, 229, 0.96);
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(18px);
+    transform: translateX(0);
+    opacity: 1;
+    transition:
+      transform 220ms ease,
+      opacity 180ms ease;
+  }
+
+  .coffee-map-sidebar__sheet-handle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.1rem 0 0.25rem;
+    border: 0;
+    background: transparent;
+    cursor: ns-resize;
+    touch-action: none;
+  }
+
+  .coffee-map-sidebar__sheet-grip {
+    display: block;
+    width: 2.6rem;
+    height: 0.32rem;
+    border-radius: 999px;
+    background: rgba(130, 130, 130, 0.55);
+    transition: background-color 180ms ease;
+  }
+
+  .coffee-map-sidebar__sheet-handle:hover
+    .coffee-map-sidebar__sheet-grip,
+  .coffee-map-sidebar__sheet-handle:focus-visible
+    .coffee-map-sidebar__sheet-grip {
+    background: rgba(90, 90, 90, 0.7);
+  }
+
+  .coffee-map-sidebar__sheet-handle:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-sidebar__top {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .coffee-map-section.is-sidebar-hidden .coffee-map-sidebar {
+    transform: translateX(calc(-100% - 1.5rem));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .coffee-map-section.is-sidebar-collapsing .coffee-map-sidebar {
+    opacity: 0.82;
+  }
+
+  .coffee-sidebar-reopen {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    background: rgba(249, 249, 249, 0.96);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(14px);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      background-color 180ms ease;
+  }
+
+  .coffee-sidebar-reopen::before,
+  .coffee-sidebar-reopen::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 999px;
+    background: #666;
+    transform: translate(-50%, -50%);
+  }
+
+  .coffee-sidebar-reopen::before {
+    width: 0.9rem;
+    height: 2px;
+  }
+
+  .coffee-sidebar-reopen::after {
+    width: 2px;
+    height: 0.9rem;
+  }
+
+  .coffee-map-section.is-sidebar-hidden .coffee-sidebar-reopen {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+
+  .coffee-sidebar-reopen:hover,
+  .coffee-sidebar-reopen:focus-visible {
+    background: rgba(255, 255, 255, 0.99);
+  }
+
+  .coffee-sidebar-reopen:focus-visible {
+    outline: none;
+  }
+
+  .coffee-sidebar-edge {
+    position: absolute;
+    top: 0;
+    right: -0.375rem;
+    bottom: 0;
+    z-index: 1002;
+    width: 0.75rem;
+    padding: 0;
+    cursor: ew-resize;
+    touch-action: none;
+    background: transparent;
+  }
+
+  .coffee-sidebar-edge::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0.375rem;
+    bottom: 0;
+    width: 1px;
+    background: rgba(229, 229, 229, 0.96);
+    transition: background-color 180ms ease;
+  }
+
+  .coffee-sidebar-edge:hover::before,
+  .coffee-sidebar-edge:focus-visible::before,
+  .coffee-map-section.is-resizing-sidebar .coffee-sidebar-edge::before {
+    background: rgba(176, 176, 176, 0.96);
+  }
+
+  .coffee-sidebar-edge:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-sidebar__header {
+    padding: 0.5rem 0.15rem 0.2rem;
+  }
+
+  .coffee-map-sidebar__header h2 {
+    margin: 0;
+    padding-block: 0.35rem;
+    color: #333;
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    line-height: 1;
+  }
+
+  .coffee-map-sidebar__summary {
+    margin: 0.15rem 0 0;
+    color: #666;
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .coffee-map-sidebar__filters {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0 0.15rem;
+  }
+
+  .coffee-map-filter-group {
+    display: grid;
+    gap: 0.48rem;
+    padding: 0;
+    border-radius: 0;
+    transition:
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-map-filter-group__summary {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: auto;
+    padding: 0.7rem 0.85rem;
+    border: 0;
+    background: transparent;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .coffee-map-filter-group__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .coffee-map-filter-group__summary::after {
+    content: "";
+    position: relative;
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    margin-left: auto;
+    border: 1px solid rgba(200, 200, 200, 0.96);
+    border-radius: 999px;
+    background:
+      linear-gradient(#666, #666) center / 0.5rem 1.5px no-repeat,
+      linear-gradient(#666, #666) center / 1.5px 0.5rem no-repeat,
+      rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    transition:
+      background-size 180ms ease,
+      border-color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-map-filter-group[open] .coffee-map-filter-group__summary::after {
+    background-size:
+      0.5rem 1.5px,
+      0 0,
+      auto;
+  }
+
+  .coffee-map-filter-group:hover,
+  .coffee-map-filter-group:focus-within {
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .coffee-map-filter-group__summary:hover,
+  .coffee-map-filter-group__summary:focus-visible {
+    background: transparent;
+    transform: translateY(-1px);
+  }
+
+  .coffee-map-filter-group__summary:hover::after,
+  .coffee-map-filter-group__summary:focus-visible::after {
+    border-color: rgba(170, 170, 170, 0.98);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+    transform: scale(1.04);
+  }
+
+  .coffee-map-filter-group__summary:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-filter-group__label {
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .coffee-map-filter-group__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0 0.85rem 0.75rem;
+  }
+
+  .coffee-map-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.42rem;
+    min-height: 2rem;
+    padding: 0.42rem 0.72rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    color: #555;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .coffee-map-filter--amenity {
+    padding-inline: 0.66rem 0.78rem;
+  }
+
+  .coffee-map-filter:hover,
+  .coffee-map-filter:focus-visible,
+  .coffee-map-filter.is-active {
+    border-color: rgba(186, 186, 186, 0.96);
+    background: rgba(255, 255, 255, 0.98);
+    color: #222;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .coffee-map-filter.is-active {
+    border-color: rgba(134, 134, 134, 0.96);
+    background: #fff;
+  }
+
+  .coffee-map-filter:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-filter__icon {
+    display: inline-flex;
+    width: 0.98rem;
+    height: 0.98rem;
+  }
+
+  .coffee-map-filter__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .coffee-map-filter__label {
+    white-space: nowrap;
+  }
+
+  .coffee-map-sidebar__list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: 0.35rem;
+    padding-right: var(--shop-list-inline-gap);
+    padding-bottom: 0.2rem;
+    scrollbar-gutter: stable;
+  }
+
+  .coffee-shop-item {
+    display: grid;
+    grid-template-columns: 2.8rem 1fr;
+    gap: 0.8rem;
+    align-items: start;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, 0.82);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .coffee-shop-item[hidden] {
+    display: none;
+  }
+
+  .coffee-shop-item:hover,
+  .coffee-shop-item:focus-visible,
+  .coffee-shop-item.is-active {
+    border-color: color-mix(in srgb, var(--shop-accent) 24%, #d9d9d9);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  .coffee-shop-item:focus-visible {
+    outline: none;
+  }
+
+  .coffee-shop-item__badge {
+    display: grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 999px;
+    background: var(--shop-accent);
+    color: white;
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow:
+      0 10px 24px color-mix(in srgb, var(--shop-accent) 20%, transparent),
+      0 0 0 2px rgba(255, 255, 255, 0.94);
+  }
+
+  .coffee-shop-item__badge.has-logo {
+    background: #fff;
+  }
+
+  .coffee-shop-item__badge-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .coffee-shop-item__text {
+    display: grid;
+    gap: 0.28rem;
+  }
+
+  .coffee-shop-item__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: start;
+  }
+
+  .coffee-shop-item__identity {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+
+  .coffee-shop-item__name {
+    color: #333;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  .coffee-shop-item__meta,
+  .coffee-shop-item__address {
+    color: #666;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .coffee-shop-item__chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .coffee-shop-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.72rem;
+    min-width: 1.72rem;
+    padding: 0.14rem;
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    color: #555;
+    line-height: 1;
+  }
+
+  .coffee-shop-chip__icon {
+    display: inline-flex;
+    width: 1.08rem;
+    height: 1.08rem;
+  }
+
+  .coffee-shop-chip__icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .coffee-marker {
+    --marker-accent: #b77b5c;
+    position: relative;
+    width: 3.4rem;
+    height: 3.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 180ms ease;
+  }
+
+  .coffee-marker:hover,
+  .coffee-marker:focus-visible,
+  .coffee-marker.is-active {
+    transform: scale(1.08);
+  }
+
+  .coffee-marker__halo,
+  .coffee-marker__core {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+  }
+
+  .coffee-marker__halo {
+    background: color-mix(in srgb, var(--marker-accent) 26%, white);
+    transform: scale(1.12);
+    opacity: 0.82;
+    transition:
+      transform 200ms ease,
+      opacity 200ms ease;
+  }
+
+  .coffee-marker__core {
+    display: grid;
+    place-items: center;
+    background: var(--marker-accent);
+    color: #fffaf5;
+    overflow: hidden;
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.14),
+      0 0 0 2px rgba(255, 255, 255, 0.96);
+  }
+
+  .coffee-marker.has-logo .coffee-marker__core {
+    background: #fff;
+  }
+
+  .coffee-marker__logo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .coffee-marker.is-active .coffee-marker__halo,
+  .coffee-marker:hover .coffee-marker__halo,
+  .coffee-marker:focus-visible .coffee-marker__halo {
+    transform: scale(1.24);
+    opacity: 1;
+  }
+
+  .coffee-marker:focus-visible {
+    outline: none;
+  }
+
+  .coffee-map-section .leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: #eef1f3;
+    overscroll-behavior: contain;
+  }
+
+  .coffee-map-section .leaflet-tile {
+    outline: 1px solid transparent;
+    filter: saturate(1.16) contrast(1.03);
+  }
+
+  .coffee-map-section .coffee-marker-wrapper {
+    background: transparent;
+    border: 0;
+  }
+
+  .coffee-map-section .leaflet-marker-icon.is-filtered-out {
+    display: none;
+  }
+
+  .coffee-map-section
+    .leaflet-popup.coffee-map-popup
+    .leaflet-popup-content-wrapper {
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 1.2rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(14px);
+    padding: 0;
+  }
+
+  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content {
+    margin: 0;
+    min-width: 20.5rem;
+    max-width: 23rem;
+  }
+
+  .coffee-map-section
+    .leaflet-popup.coffee-map-popup
+    .leaflet-popup-tip-container {
+    margin-top: -1px;
+  }
+
+  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-tip {
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: none;
+    border-right: 1px solid rgba(229, 229, 229, 0.96);
+    border-bottom: 1px solid rgba(229, 229, 229, 0.96);
+  }
+
+  .coffee-map-popup__content {
+    display: grid;
+    gap: 0.42rem;
+    padding: 0.96rem 1.05rem;
+  }
+
+  .coffee-map-popup__body {
+    display: grid;
+    gap: 0.32rem;
+    align-items: start;
+  }
+
+  .coffee-map-popup__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.62rem;
+    align-items: center;
+  }
+
+  .coffee-map-popup__heading {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .coffee-map-popup__title-row {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+  }
+
+  .coffee-map-popup__content h3 {
+    margin: 0;
+    color: #333;
+    font-size: 0.93rem;
+    line-height: 1.05;
+  }
+
+  .coffee-map-section .coffee-map-popup__neighborhood,
+  .coffee-map-section .coffee-map-popup__schedule-line {
+    margin: 0;
+    color: #666;
+    font-size: 0.72rem;
+    line-height: 1.08;
+  }
+
+  .coffee-map-section .coffee-map-popup__neighborhood {
+    margin-top: 0.2rem;
+    margin-bottom: 0;
+    line-height: 1;
+  }
+
+  .coffee-map-popup__details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.65rem;
+    align-items: start;
+    min-width: 0;
+  }
+
+  .coffee-map-popup__description {
+    margin: 0;
+    color: #555;
+    font-size: 0.74rem;
+    line-height: 1.14;
+    white-space: pre-line;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .coffee-map-popup__schedule {
+    display: grid;
+    gap: 0.1rem;
+    grid-column: 2;
+    align-self: center;
+    justify-self: end;
+    max-width: 8.2rem;
+    text-align: right;
+    align-content: start;
+  }
+
+  .coffee-map-section .coffee-map-popup__schedule-line {
+    margin: 0;
+  }
+
+  .coffee-map-popup__address {
+    margin: 0;
+    color: #666;
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+
+  .coffee-map-popup__text-link {
+    color: #4d5560;
+    font-size: 0.74rem;
+    line-height: 1.25;
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+
+  .coffee-map-popup__links {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .coffee-map-popup__amenities {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    max-width: none;
+    padding-top: 0;
+  }
+
+  .coffee-map-popup__text-link:hover,
+  .coffee-map-popup__text-link:focus-visible {
+    color: #222;
+  }
+
+  .coffee-map-popup__links > :first-child {
+    justify-self: start;
+  }
+
+  .coffee-map-popup__links > :last-child {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .coffee-map-popup__spacer {
+    display: block;
+  }
+
+  @media (max-width: 720px) {
+    .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content {
+      min-width: 18rem;
+      max-width: 19.5rem;
+    }
+  }
+
+  .coffee-map-section .leaflet-bottom.leaflet-right,
+  .coffee-map-section .leaflet-bottom.leaflet-left {
+    margin: 0 1rem 1rem;
+  }
+
+  .coffee-map-section .leaflet-control-attribution {
+    border: 1px solid rgba(229, 229, 229, 0.96);
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    margin: 0;
+    padding: 0.3rem 0.65rem;
+    color: #666;
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
+  .coffee-map-section .leaflet-control-attribution a {
+    color: #555;
+  }
+
+  @media (max-width: 900px) {
+    .coffee-map-sidebar {
+      top: auto;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      gap: 0.75rem;
+      width: auto;
+      height: var(--mobile-sheet-visible-height);
+      max-height: var(--mobile-sheet-max-height);
+      padding: 0 0.85rem 0.85rem;
+      border-top: 1px solid rgba(229, 229, 229, 0.96);
+      border-right: 0;
+      box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.12);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      transform: none;
+      opacity: 1;
+      transition:
+        height 240ms ease,
+        box-shadow 180ms ease;
+    }
+
+    .coffee-map-section.is-resizing-mobile-sheet .coffee-map-sidebar {
+      transition: none;
+    }
+
+    .coffee-sidebar-edge {
+      display: none;
+    }
+
+    .coffee-sidebar-reopen {
+      display: none;
+    }
+
+    .coffee-map-section .leaflet-bottom.leaflet-right,
+    .coffee-map-section .leaflet-bottom.leaflet-left {
+      margin-bottom: 1rem;
+    }
+
+    .coffee-map-sidebar__sheet-handle {
+      display: flex;
+    }
+
+    .coffee-map-sidebar__top {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      gap: 0.55rem;
+      margin: 0 -0.85rem 0;
+      padding: 0.5rem 0.85rem 0.7rem;
+      background: rgba(249, 249, 249, 0.96);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 10px 18px rgba(249, 249, 249, 0.96);
+    }
+
+    .coffee-map-sidebar__header {
+      padding-top: 0;
+    }
+
+    .coffee-map-sidebar__header h2 {
+      display: none;
+    }
+
+    .coffee-map-sidebar__summary {
+      margin-top: 0;
+      font-size: 0.84rem;
+    }
+
+    .coffee-map-sidebar__list {
+      flex: 0 0 auto;
+      min-height: auto;
+      overflow: visible;
+      padding-bottom: 0.3rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .coffee-map-sidebar {
+      width: calc(100vw - 1rem);
+    }
+
+    .coffee-marker {
+      width: 3rem;
+      height: 3rem;
+    }
+  }
+</style>

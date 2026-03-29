@@ -1,0 +1,14 @@
+---
+import CoffeeMap from "../components/CoffeeMap.astro";
+import { sanFranciscoCoffeeGuide } from "../data/coffeeShops";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Favorite Coffee Shops | Andre Amor" fullBleed={true}>
+  <CoffeeMap
+    title="Favorite Coffee Shops"
+    cityLabel={sanFranciscoCoffeeGuide.label}
+    center={sanFranciscoCoffeeGuide.center}
+    shops={sanFranciscoCoffeeGuide.shops}
+  />
+</BaseLayout>

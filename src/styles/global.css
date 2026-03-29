@@ -10,6 +10,13 @@ body {
   color: #111;
   background-color: #fff;
   line-height: 1.5;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
 }
 
 a {
@@ -73,6 +80,21 @@ a:hover {
   max-width: 850px;
   margin: 0 auto;
   padding: 1rem;
+}
+
+.page-shell {
+  width: 100%;
+}
+
+.page-shell--full {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  padding: 0;
+}
+
+.page-shell--full > * {
+  flex: 1;
 }
 
 .about {
@@ -489,4 +511,3 @@ details[open] summary {
 #books > section {
   margin: 1.5rem 0 1.5rem;
 }
-

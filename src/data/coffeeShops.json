@@ -1,0 +1,745 @@
+{
+  "sanFrancisco": {
+    "id": "san-francisco",
+    "label": "San Francisco, California",
+    "center": [
+      -122.433,
+      37.764
+    ],
+    "shops": [
+      {
+        "id": "capital-one-cafe",
+        "name": "Capital One Cafe",
+        "coordinates": [
+          -122.403832,
+          37.78877
+        ],
+        "description": "Capital One!",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/capital-one-cafe.jpg",
+        "website": "https://www.capitalone.com/local/sanfrancisco-unionsquare/",
+        "neighborhood": "Union Square",
+        "address": "101 Post St",
+        "addressUrl": "https://maps.app.goo.gl/UUVY5CixnATuAtyX9",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "9 AM - 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM - 6 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "9 AM - 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "corgi-cafe",
+        "name": "Corgi Cafe",
+        "coordinates": [
+          -122.404462,
+          37.790525
+        ],
+        "description": "24/7 cafe",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/corgi-cafe.png",
+        "website": "https://thecorgi.cafe/",
+        "neighborhood": "Financial District",
+        "address": "9 Claude Ln",
+        "addressUrl": "https://maps.app.goo.gl/qHt7sP8mG1h4HtVZ8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "12 AM - 12 AM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "blue-bottle-pac-heights",
+        "name": "Blue Bottle",
+        "coordinates": [
+          -122.4346,
+          37.7926
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/blue-bottle-pac-heights.jpeg",
+        "website": "https://bluebottlecoffee.com/us/eng",
+        "neighborhood": "Pacific Heights",
+        "address": "2453 Fillmore St",
+        "addressUrl": "https://maps.app.goo.gl/JgFs874Lj7ABuBUq5",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "6 AM - 7 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "blue-bottle-mission-bay",
+        "name": "Blue Bottle",
+        "coordinates": [
+          -122.391072,
+          37.771107
+        ],
+        "description": "good spot if you need to go to chase center",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/blue-bottle-mission-bay.jpeg",
+        "website": "https://bluebottlecoffee.com/us/eng",
+        "neighborhood": "Mission Bay",
+        "address": "1385 4th St",
+        "addressUrl": "https://maps.app.goo.gl/N3CRPMqaUpMQfGgN6",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "6:30 AM – 5:30 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "jane-on-third",
+        "name": "Jane on Third",
+        "coordinates": [
+          -122.401038,
+          37.785719
+        ],
+        "description": "Jane Street reference",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/jane-on-third.png",
+        "website": "https://www.itsjane.com/menu/jane-on-third/",
+        "neighborhood": "SoMa",
+        "address": "151 3rd St",
+        "addressUrl": "https://maps.app.goo.gl/7oKYM1CGTs42enL5A",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed"
+              ],
+              "label": "9 AM - 6 PM"
+            },
+            {
+              "days": [
+                "Thu"
+              ],
+              "label": "9 AM - 8 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "9 AM - 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "the-mill",
+        "name": "The Mill",
+        "coordinates": [
+          -122.437021,
+          37.776442
+        ],
+        "description": "really like their almond croissants",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/the-mill.png",
+        "website": "https://www.themillsf.com/#about",
+        "neighborhood": "NoPa",
+        "address": "736 Divisadero St",
+        "addressUrl": "https://maps.app.goo.gl/TKW6EjKoRUQ1kEzm6",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM - 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "la-boulangerie",
+        "name": "La Boulangerie",
+        "coordinates": [
+          -122.449231,
+          37.765992
+        ],
+        "description": "really good croissants",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/la-boulangerie.jpg",
+        "website": "https://www.laboulangeriesf.com/",
+        "neighborhood": "Cole Valley",
+        "address": "1000 Cole St",
+        "addressUrl": "https://maps.app.goo.gl/FtqpoYfHmzmxQoxf7",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 4:30 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "chestnut-street-coffee-roastery",
+        "name": "Chestnut Street Coffee Roastery",
+        "coordinates": [
+          -122.438561,
+          37.800238
+        ],
+        "description": "closes early :(",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/chestnut-street-coffee-roastery.jpg",
+        "website": "https://chestnutstreetcoffeeroasterysanfrancisco.cafecityguide.website/",
+        "neighborhood": "Marina District",
+        "address": "2331 Chestnut St",
+        "addressUrl": "https://maps.app.goo.gl/4j4rGEh42G72pei77",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "6:30 AM - 2 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "caffe-central",
+        "name": "Caffè Central",
+        "coordinates": [
+          -122.458,
+          37.7636
+        ],
+        "description": "inside ucsf! pretty good study spot",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/caffe-central.webp",
+        "neighborhood": "Parnassus Heights",
+        "address": "530 Parnassus Ave",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7:30 AM - 3 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "Closed"
+            }
+          ]
+        }
+      },
+      {
+        "id": "xox-truffles",
+        "name": "XOX Truffles",
+        "coordinates": [
+          -122.412065,
+          37.801775
+        ],
+        "description": "Coffee came with a free truffle :)",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/xox-truffles.png",
+        "website": "https://xoxtruffles.cafe/",
+        "neighborhood": "North Beach",
+        "address": "754 Columbus Ave",
+        "addressUrl": "https://maps.app.goo.gl/AB1az8vihBN7sWuSA",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed"
+              ],
+              "label": "12 PM – 7 PM"
+            },
+            {
+              "days": [
+                "Thu"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "12 PM – 7 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "cafe-reveille",
+        "name": "Café Réveille",
+        "coordinates": [
+          -122.432072,
+          37.771057
+        ],
+        "description": "one of the first coffee shops I went to in SF!",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/cafe-reveille.webp",
+        "website": "https://www.cafereveille.com/",
+        "neighborhood": "Lower Haight",
+        "address": "201 Steiner St",
+        "addressUrl": "https://maps.app.goo.gl/s3fSRzgiE7rqhXFr6",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 7:30 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "arsicault-bakery-civic-center",
+        "name": "Arsicault Bakery",
+        "coordinates": [
+          -122.411205,
+          37.781321
+        ],
+        "description": "a classic",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/arsicault-bakery-civic-center.webp",
+        "website": "https://arsicault-bakery.com/",
+        "neighborhood": "Civic Center",
+        "address": "87 McAllister St",
+        "addressUrl": "https://maps.app.goo.gl/ceUgL6GwG8och4Ac8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 3 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "il-parco",
+        "name": "Il Parco",
+        "coordinates": [
+          -122.459641,
+          37.801556
+        ],
+        "description": "expensive but love the environment",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/il-parco.png",
+        "website": "https://ilparcosf.com/",
+        "neighborhood": "Presidio",
+        "address": "215 Lincoln Blvd",
+        "addressUrl": "https://maps.app.goo.gl/5n2JyrcyusH7c8SZ8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM–8 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "the-coffee-berry",
+        "name": "The Coffee Berry",
+        "coordinates": [
+          -122.427997,
+          37.800079
+        ],
+        "description": "studied here with a friend",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/the-coffee-berry.png",
+        "website": "https://www.thecoffeeberrysf.com/",
+        "neighborhood": "Cow Hollow",
+        "address": "1410 Lombard St",
+        "addressUrl": "https://maps.app.goo.gl/2xjpxpWD68TDjw4U8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "stardust-coffee-house",
+        "name": "Stardust Coffee House",
+        "coordinates": [
+          -121.931081,
+          37.287676
+        ],
+        "description": "used to study here all the time\nfriend met his girlfriend here",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/stardust-coffee-house.jpg",
+        "website": "https://www.stardustsuper.com/",
+        "neighborhood": "Campbell",
+        "address": "1725 S Bascom Ave #1100",
+        "addressUrl": "https://maps.app.goo.gl/BMBAvpDmbESnMJ1D8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "9 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "8 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "9 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "paper-son-coffee",
+        "name": "Paper Son Coffee",
+        "coordinates": [
+          -122.388673,
+          37.760998
+        ],
+        "description": "really good ube bread\nclose to YC",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/paper-son-coffee.jpeg",
+        "website": "http://papersoncoffee.com/",
+        "neighborhood": "Dogpatch",
+        "address": "2343 3rd St UNIT 100",
+        "addressUrl": "https://maps.app.goo.gl/fwa9vr6emJSEZaZd6",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 2 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "juniper",
+        "name": "Juniper",
+        "coordinates": [
+          -122.421233,
+          37.790944
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/juniper.jpg",
+        "website": "http://www.juniper.cafe/",
+        "neighborhood": "Polk Gulch",
+        "address": "1401 Polk St",
+        "addressUrl": "https://maps.app.goo.gl/yfaF9pysz8EARMtMA",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7:30 AM – 3 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "cafe-reveille-polk-street",
+        "name": "Cafe Réveille",
+        "coordinates": [
+          -122.42163,
+          37.795116
+        ],
+        "description": "love this spot",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/cafe-reveille-polk-street.webp",
+        "website": "http://cafereveille.com/",
+        "neighborhood": "Polk Gulch",
+        "address": "1998 Polk St",
+        "addressUrl": "https://maps.app.goo.gl/438ngA9k8XBAnPaQ8",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7:30 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "la-boulangerie-hayes-valley",
+        "name": "La Boulangerie",
+        "coordinates": [
+          -122.424196,
+          37.776635
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/la-boulangerie-hayes-valley.jpg",
+        "website": "http://www.laboulangeriesf.com/",
+        "neighborhood": "Hayes Valley",
+        "address": "500 Hayes St",
+        "addressUrl": "https://maps.app.goo.gl/ByCpyQc1tkTWSMYKA",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "jane-on-filmore",
+        "name": "Jane on Filmore",
+        "coordinates": [
+          -122.43387,
+          37.788776
+        ],
+        "description": "gave free smarties :)",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/jane-on-filmore.png",
+        "neighborhood": "Pacific Heights",
+        "address": "2123 Fillmore St",
+        "addressUrl": "https://maps.app.goo.gl/KSV3PMm6smZtYHb47",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 5 PM"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

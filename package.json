@@ -7,10 +7,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "coffee-admin": "COFFEE_ADMIN_WATCH=1 node --watch scripts/coffee-admin-server.mjs",
+    "coffee-admin:once": "node scripts/coffee-admin-server.mjs",
     "astro": "astro"
   },
   "dependencies": {
     "katex": "^0.16.0",
+    "leaflet": "^1.9.4",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
