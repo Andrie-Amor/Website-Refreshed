@@ -2185,7 +2185,7 @@ const sortedShops = [...shops].sort((left, right) =>
       border-top: 1px solid rgba(229, 229, 229, 0.96);
       border-right: 0;
       box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.12);
-      overflow-y: auto;
+      overflow: hidden;
       overscroll-behavior: contain;
       transform: none;
       opacity: 1;
@@ -2216,9 +2216,9 @@ const sortedShops = [...shops].sort((left, right) =>
     }
 
     .coffee-map-sidebar__top {
-      position: sticky;
-      top: 0;
+      position: relative;
       z-index: 2;
+      flex: 0 0 auto;
       gap: 0.55rem;
       margin: 0 -0.85rem 0;
       padding: 0.5rem 0.85rem 0.7rem;
@@ -2241,9 +2241,12 @@ const sortedShops = [...shops].sort((left, right) =>
     }
 
     .coffee-map-sidebar__list {
-      flex: 0 0 auto;
-      min-height: auto;
-      overflow: visible;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
       padding-bottom: 0.3rem;
     }
   }
