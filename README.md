@@ -1,3 +1,3 @@
-# Andre Amor Personal Website
+# Andre's Personal Website
 
 Welcome!
