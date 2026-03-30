@@ -538,6 +538,16 @@ const sortedShops = [...shops].sort((left, right) =>
         currentMobileSheetHeight = clampMobileSheetHeight(height);
         syncMobileSheetHeight();
       };
+      const setMobileSheetGestureLock = (locked) => {
+        document.documentElement.classList.toggle(
+          "coffee-map-mobile-sheet-active",
+          locked,
+        );
+        document.body.classList.toggle(
+          "coffee-map-mobile-sheet-active",
+          locked,
+        );
+      };
       const snapMobileSheet = (target = "nearest") => {
         const snapPoints = [
           MOBILE_SHEET_MIN_HEIGHT,
@@ -1263,6 +1273,7 @@ const sortedShops = [...shops].sort((left, right) =>
           mobileSheetHandle.releasePointerCapture(activeMobileSheetPointerId);
         }
 
+        setMobileSheetGestureLock(false);
         root.classList.remove("is-resizing-mobile-sheet");
         activeMobileSheetPointerId = null;
         snapMobileSheet();
@@ -1276,6 +1287,7 @@ const sortedShops = [...shops].sort((left, right) =>
         mobileSheetDragStartHeight = currentMobileSheetHeight;
         mobileSheetDragCurrentHeight = currentMobileSheetHeight;
         mobileSheetWasDragged = false;
+        setMobileSheetGestureLock(true);
         root.classList.add("is-resizing-mobile-sheet");
         mobileSheetHandle.setPointerCapture(event.pointerId);
         event.preventDefault();
@@ -1293,6 +1305,7 @@ const sortedShops = [...shops].sort((left, right) =>
         mobileSheetDragCurrentHeight =
           mobileSheetDragStartHeight - (event.clientY - mobileSheetDragStartY);
         setMobileSheetHeight(mobileSheetDragCurrentHeight);
+        event.preventDefault();
       });
 
       mobileSheetHandle?.addEventListener("pointerup", stopResizingMobileSheet);
@@ -1405,12 +1418,22 @@ const sortedShops = [...shops].sort((left, right) =>
     display: none;
     align-items: center;
     justify-content: center;
+    position: relative;
     width: 100%;
     padding: 0.1rem 0 0.25rem;
     border: 0;
     background: transparent;
     cursor: ns-resize;
     touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .coffee-map-sidebar__sheet-handle::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.85rem -0.2rem;
   }
 
   .coffee-map-sidebar__sheet-grip {
@@ -2169,6 +2192,11 @@ const sortedShops = [...shops].sort((left, right) =>
 
   .coffee-map-section .leaflet-control-attribution a {
     color: #555;
+  }
+
+  :global(html.coffee-map-mobile-sheet-active),
+  :global(body.coffee-map-mobile-sheet-active) {
+    overscroll-behavior-y: none;
   }
 
   @media (max-width: 900px) {
