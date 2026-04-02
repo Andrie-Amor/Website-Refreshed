@@ -739,6 +739,45 @@
             }
           ]
         }
+      },
+      {
+        "id": "heyma-yemeni-coffee",
+        "name": "Heyma Yemeni Coffee",
+        "coordinates": [
+          -122.411216,
+          37.774709
+        ],
+        "description": "diamond in the rough",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/heyma-yemeni-coffee.png",
+        "website": "https://www.heymacoffeeca.com/",
+        "neighborhood": "SoMa",
+        "address": "248 9th St",
+        "addressUrl": "https://maps.app.goo.gl/iaok2sF2kKUmSXTRA",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "7 AM – 11:30 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 12:30 AM"
+            }
+          ]
+        }
       }
     ]
   }
