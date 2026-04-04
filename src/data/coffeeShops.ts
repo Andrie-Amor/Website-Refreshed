@@ -10,7 +10,6 @@ export type CoffeeShopDetails = {
   sockets?: boolean;
   seating?: boolean;
   hours?: CoffeeShopHoursEntry[];
-  food?: string;
 };
 
 export type CoffeeShop = {
