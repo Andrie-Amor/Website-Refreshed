@@ -136,7 +136,6 @@ function normalizeDetails(rawDetails) {
     sockets: optionalBoolean(rawDetails?.sockets),
     seating: optionalBoolean(rawDetails?.seating),
     hours: normalizeHours(rawDetails?.hours),
-    food: optionalString(rawDetails?.food),
   };
 
   return Object.fromEntries(
@@ -902,11 +901,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                     </label>
                   </div>
                 </div>
-                <div class="field-group">
-                  <label for="food">Food</label>
-                  <input id="food" name="food" type="text" placeholder="Pastries, sandwiches, toast..." />
-                </div>
-
                 <div class="field-group col-span-2">
                   <div class="toggle-row" role="group" aria-label="Amenities">
                     <button type="button" class="toggle-chip" data-detail-toggle="wifi" aria-pressed="false">Wifi</button>
@@ -1121,7 +1115,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             sockets: false,
             seating: false,
             hours: [],
-            food: "",
           },
         };
       }
@@ -1164,7 +1157,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         document.getElementById("address-url").value = shop.addressUrl || "";
         document.getElementById("description").value = shop.description || "";
         fillHoursInputs(shop.details?.hours || []);
-        document.getElementById("food").value = shop.details?.food || "";
         document.getElementById("wifi").value = shop.details?.wifi ? ACTIVE_DETAIL_VALUE : "";
         document.getElementById("sockets").value = shop.details?.sockets ? ACTIVE_DETAIL_VALUE : "";
         document.getElementById("seating").value = shop.details?.seating ? ACTIVE_DETAIL_VALUE : "";
@@ -1268,7 +1260,6 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             description: document.getElementById("description").value,
             details: {
               hours: buildHoursSchedule(),
-              food: document.getElementById("food").value,
               wifi: document.getElementById("wifi").value,
               sockets: document.getElementById("sockets").value,
               seating: document.getElementById("seating").value,
