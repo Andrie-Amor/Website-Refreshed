@@ -778,6 +778,252 @@
             }
           ]
         }
+      },
+      {
+        "id": "rise-grind-coffee",
+        "name": "Rise & Grind Coffee",
+        "coordinates": [
+          -122.466212,
+          37.773197
+        ],
+        "description": "closes sooo early",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/rise-grind-coffee.png",
+        "website": "https://riseandgrind-sf.com/",
+        "neighborhood": "Inner Richmond",
+        "address": "8th Ave corridor",
+        "addressUrl": "https://maps.app.goo.gl/XTNcZD75VcgBSWa98",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 3 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "8 AM – 1 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 3 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "pixlcat-coffee",
+        "name": "Pixlcat Coffee",
+        "coordinates": [
+          -122.464873,
+          37.782799
+        ],
+        "description": "high personality shop but the drinks were way too sweet",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/pixlcat-coffee.png",
+        "website": "https://www.pixlcatcoffee.com/",
+        "neighborhood": "Inner Richmond",
+        "address": "519 Clement St",
+        "addressUrl": "https://maps.app.goo.gl/52eUNww35tSfDPMs8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "home-coffee-roasters",
+        "name": "Home Coffee Roasters",
+        "coordinates": [
+          -122.480992,
+          37.782321
+        ],
+        "description": "one of the better study spots",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/home-coffee-roasters.jpg",
+        "website": "http://homecoffeesf.com/",
+        "neighborhood": "Central Richmond",
+        "address": "2018 Clement St",
+        "addressUrl": "https://maps.app.goo.gl/tXtS2AA4cuyVoF976",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7:30 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "andytown-coffee-roasters-ocean-beach",
+        "name": "Andytown Coffee Roasters",
+        "coordinates": [
+          -122.510694,
+          37.772624
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/andytown-coffee-roasters-ocean-beach.png",
+        "website": "https://andytownsf.com/",
+        "neighborhood": "Outer Richmond",
+        "address": "800 Great Hwy",
+        "addressUrl": "https://maps.app.goo.gl/SSZVYU1iHLZMfZLd9",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "parachute-bakery",
+        "name": "Parachute Bakery",
+        "coordinates": [
+          -122.393972,
+          37.796102
+        ],
+        "description": "favorite in the ferry building",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/parachute-bakery.webp",
+        "website": "http://parachutebakery.com/",
+        "neighborhood": "Embarcadero",
+        "address": "Ferry Building, 1, #5",
+        "addressUrl": "https://maps.app.goo.gl/NavcPmnRmaqimXcG6",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "sweet-glory",
+        "name": "Sweet Glory",
+        "coordinates": [
+          -122.466077,
+          37.76338
+        ],
+        "description": "great date spot",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/sweet-glory.webp",
+        "website": "https://www.sweetglorysf.com/",
+        "neighborhood": "Inner Sunset",
+        "address": "1336 9th Ave",
+        "addressUrl": "https://maps.app.goo.gl/utDvssSV8ziisqNs5",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "11 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Mon"
+              ],
+              "label": "12 – 6 PM"
+            },
+            {
+              "days": [
+                "Tue"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Wed",
+                "Thu"
+              ],
+              "label": "12–6 PM"
+            },
+            {
+              "days": [
+                "Fri"
+              ],
+              "label": "11 AM – 6 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "11 AM – 9 PM"
+            }
+          ]
+        }
       }
     ]
   }
