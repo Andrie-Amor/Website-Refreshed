@@ -1024,6 +1024,211 @@
             }
           ]
         }
+      },
+      {
+        "id": "barista-coffee-brunch",
+        "name": "Barista Coffee & Brunch",
+        "coordinates": [
+          -122.447275,
+          37.787989
+        ],
+        "description": "very pleasant area",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/barista-coffee-brunch.png",
+        "website": "https://baristasf.com/",
+        "neighborhood": "Presidio Heights",
+        "address": "3313 Sacramento St",
+        "addressUrl": "https://maps.app.goo.gl/VFpn9oDph2LgPqW38",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "arsicault-bakery-richmond",
+        "name": "Arsicault Bakery",
+        "coordinates": [
+          -122.459306,
+          37.783426
+        ],
+        "description": "good luck with the line 🫡",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/arsicault-bakery-richmond.webp",
+        "website": "https://arsicault-bakery.com/",
+        "neighborhood": "Inner Richmond",
+        "address": "397 Arguello Blvd",
+        "addressUrl": "https://maps.app.goo.gl/uyF7BeFubE3GaJxS9",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 3:30 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "8 AM – 3 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 3:30 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "fifty-fifty",
+        "name": "fifty/fifty",
+        "coordinates": [
+          -122.45302,
+          37.781584
+        ],
+        "description": "barista was super nice",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/fifty-fifty.webp",
+        "website": "https://fiftyfiftysf.square.site/",
+        "neighborhood": "Laurel Heights",
+        "address": "3157 Geary Blvd",
+        "addressUrl": "https://maps.app.goo.gl/L8CEfeSte8EuCyeP7",
+        "details": {
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7:30 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "b-patisserie",
+        "name": "b. patisserie",
+        "coordinates": [
+          -122.440878,
+          37.787848
+        ],
+        "description": "great place for coffee + patisseries",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/b-patisserie.jpg",
+        "website": "http://bpatisserie.com/",
+        "neighborhood": "Lower Pacific Heights",
+        "address": "2821 California St",
+        "addressUrl": "https://maps.app.goo.gl/KiBEmBGPXYKhpjR66",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "flywheel-coffee-roasters",
+        "name": "Flywheel Coffee Roasters",
+        "coordinates": [
+          -122.453458,
+          37.769684
+        ],
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/flywheel-coffee-roasters.png",
+        "website": "https://flywheelcoffee.com/",
+        "neighborhood": "Haight-Ashbury",
+        "address": "672 Stanyan St",
+        "addressUrl": "https://maps.app.goo.gl/FX8jnvn3DuuTxaq67",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 6 PM"
+            }
+          ]
+        }
       }
     ]
   }
