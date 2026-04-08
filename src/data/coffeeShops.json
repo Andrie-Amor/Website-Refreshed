@@ -92,6 +92,7 @@
           -122.4346,
           37.7926
         ],
+        "description": "studied here a few times",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/blue-bottle-pac-heights.jpeg",
         "website": "https://bluebottlecoffee.com/us/eng",
@@ -597,6 +598,7 @@
           -122.421233,
           37.790944
         ],
+        "description": "chill spot to do work in",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/juniper.jpg",
         "website": "http://www.juniper.cafe/",
@@ -662,6 +664,7 @@
           -122.424196,
           37.776635
         ],
+        "description": "general area is pretty nice",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/la-boulangerie-hayes-valley.jpg",
         "website": "http://www.laboulangeriesf.com/",
@@ -708,6 +711,7 @@
         "description": "gave free smarties :)",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/jane-on-filmore.png",
+        "website": "https://www.itsjane.com/location/jane-on-fillmore/",
         "neighborhood": "Pacific Heights",
         "address": "2123 Fillmore St",
         "addressUrl": "https://maps.app.goo.gl/KSV3PMm6smZtYHb47",
@@ -1226,6 +1230,162 @@
                 "Sat"
               ],
               "label": "7 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "jane-on-larkin",
+        "name": "Jane on Larkin",
+        "coordinates": [
+          -122.4174,
+          37.7839
+        ],
+        "description": "very welcoming",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/jane-on-larkin.png",
+        "website": "https://www.itsjane.com/location/jane-on-larkin/",
+        "neighborhood": "Tenderloin",
+        "address": "925 Larkin St",
+        "addressUrl": "https://maps.app.goo.gl/yYqi3q4tnbXJ9wdB7",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "spro-coffee-lab",
+        "name": "SPRO Coffee Lab",
+        "coordinates": [
+          -122.4187,
+          37.7809
+        ],
+        "description": "government coffee shop type of environment",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/spro-coffee-lab.jpeg",
+        "website": "https://sprocoffeelab.com/",
+        "neighborhood": "Civic Center",
+        "address": "525 Golden Gate Ave",
+        "addressUrl": "https://maps.app.goo.gl/gBNHbRTXc9UFmLPi7",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "Closed"
+            }
+          ]
+        }
+      },
+      {
+        "id": "verve-coffee-roasters",
+        "name": "Verve Coffee Roasters",
+        "coordinates": [
+          -122.4311,
+          37.7664
+        ],
+        "description": "has the startup type of environment",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/verve-coffee-roasters.jpeg",
+        "website": "https://www.vervecoffee.com/pages/locations-san-francisco",
+        "neighborhood": "Castro District",
+        "address": "2101 Market St",
+        "addressUrl": "https://maps.app.goo.gl/1NtGouVWDfqF2ppcA",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5:30 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5:30 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "cafe-de-casa",
+        "name": "Cafe de Casa",
+        "coordinates": [
+          -122.4347,
+          37.762
+        ],
+        "description": "absolutely incredible rosca de coco",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/cafe-de-casa.jpg",
+        "website": "http://www.cafedecasa.com/",
+        "neighborhood": "Castro District",
+        "address": "3985 17th St",
+        "addressUrl": "https://maps.app.goo.gl/A1dKdHyMhyfaDNds9",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 6 PM"
             }
           ]
         }
