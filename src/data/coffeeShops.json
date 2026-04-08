@@ -1389,6 +1389,37 @@
             }
           ]
         }
+      },
+      {
+        "id": "artly-robot-coffee",
+        "name": "Artly Robot Coffee",
+        "coordinates": [
+          -122.411,
+          37.8109
+        ],
+        "description": "they're replacing baristas with AI 😱😱",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/artly-robot-coffee.png",
+        "website": "https://artly.coffee/",
+        "neighborhood": "Fisherman’s Wharf",
+        "address": "Pier 39, 106-B Beach St Space K",
+        "addressUrl": "https://maps.app.goo.gl/uKhFzn5g2m5Z1Mq18",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "10 AM – 7:30 PM"
+            }
+          ]
+        }
       }
     ]
   }
