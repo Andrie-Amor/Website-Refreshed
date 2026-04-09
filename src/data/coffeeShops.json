@@ -1420,6 +1420,174 @@
             }
           ]
         }
+      },
+      {
+        "id": "abanico-coffee-roasters",
+        "name": "Abanico Coffee Roasters",
+        "coordinates": [
+          -122.419247,
+          37.763696
+        ],
+        "description": "very quiet when I studied here",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/abanico-coffee-roasters.webp",
+        "website": "https://www.abanicocoffee.com/",
+        "neighborhood": "Mission District",
+        "address": "2121 Mission St",
+        "addressUrl": "https://maps.app.goo.gl/FPAsWqHPum9xjkWf8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7:30 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tadaima",
+        "name": "Tadaima",
+        "coordinates": [
+          -122.418414,
+          37.758982
+        ],
+        "description": "i'm homee",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/tadaima.png",
+        "website": "https://tadaimasf.com/",
+        "neighborhood": "Mission District",
+        "address": "3515 20th St B",
+        "addressUrl": "https://maps.app.goo.gl/KRFnffAbnAJzcndT8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "10 AM – 5:30 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "11 AM – 4:30 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "10 AM – 5:30 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "sightglass-coffee",
+        "name": "Sightglass Coffee",
+        "coordinates": [
+          -122.410859,
+          37.759365
+        ],
+        "description": "felt like a hidden spot",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/sightglass-coffee.png",
+        "website": "http://sightglasscoffee.com/",
+        "neighborhood": "Mission District",
+        "address": "3014 20th St",
+        "addressUrl": "https://maps.app.goo.gl/QQkgGmPWeUrotdiu6",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "ritual-coffee-roasters",
+        "name": "Ritual Coffee Roasters",
+        "coordinates": [
+          -122.42178,
+          37.756947
+        ],
+        "description": "lots of seating to do work",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/ritual-coffee-roasters.png",
+        "website": "http://ritualcoffee.com/",
+        "neighborhood": "Mission District",
+        "address": "1026 Valencia St",
+        "addressUrl": "https://maps.app.goo.gl/9VypFgEGm2bB51HKA",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "6:30 AM – 8 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "6:30 AM – 7 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "6:30 AM – 8 PM"
+            }
+          ]
+        }
       }
     ]
   }
