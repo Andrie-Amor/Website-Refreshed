@@ -470,7 +470,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         top: 1rem;
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - 4rem);
+        height: calc(100vh - 4rem);
       }
 
       .panel-header {
@@ -537,9 +537,12 @@ const ADMIN_PAGE_HTML = `<!doctype html>
 
       .shop-list {
         display: grid;
+        flex: 1 1 auto;
         gap: 0.55rem;
+        min-height: 0;
         padding: 0.8rem;
-        overflow: auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       .shop-card {
@@ -767,6 +770,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
 
         .sidebar {
           position: static;
+          height: auto;
           min-height: 0;
         }
       }
