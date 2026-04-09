@@ -301,6 +301,7 @@ const sortedShops = [...shops].sort((left, right) =>
       const INITIAL_VIEW_ZOOM = 13;
       const INITIAL_VIEW_MAX_ZOOM = 14;
       const MOBILE_INITIAL_VIEW_MAX_ZOOM = 12;
+      const PHONE_INITIAL_VIEW_MAX_ZOOM = 13;
       const MOBILE_SHEET_MIN_HEIGHT = 86;
       const MOBILE_SHEET_DEFAULT_HEIGHT = 128;
       let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
@@ -500,6 +501,7 @@ const sortedShops = [...shops].sort((left, right) =>
       let visibleShopIds = new Set(shops.map((shop) => shop.id));
       let activeShopId = null;
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
+      const isPhone = () => window.matchMedia("(max-width: 640px)").matches;
       const isSidebarHidden = () =>
         root.classList.contains("is-sidebar-hidden");
       const getMobileSheetMaxHeight = () => {
@@ -658,9 +660,15 @@ const sortedShops = [...shops].sort((left, right) =>
           [center[0] - 0.05, center[1] - 0.042],
           [center[0] + 0.05, center[1] + 0.042],
         ];
-        const [southWest, northEast] = isCompact()
-          ? mobileBounds
-          : initialBounds;
+        const phoneBounds = [
+          [center[0] - 0.012, center[1] - 0.004],
+          [center[0] + 0.035, center[1] + 0.027],
+        ];
+        const [southWest, northEast] = isPhone()
+          ? phoneBounds
+          : isCompact()
+            ? mobileBounds
+            : initialBounds;
 
         map.fitBounds(
           [
@@ -670,9 +678,11 @@ const sortedShops = [...shops].sort((left, right) =>
           {
             paddingTopLeft: [padding.left, padding.top],
             paddingBottomRight: [padding.right, padding.bottom],
-            maxZoom: isCompact()
-              ? MOBILE_INITIAL_VIEW_MAX_ZOOM
-              : INITIAL_VIEW_MAX_ZOOM,
+            maxZoom: isPhone()
+              ? PHONE_INITIAL_VIEW_MAX_ZOOM
+              : isCompact()
+                ? MOBILE_INITIAL_VIEW_MAX_ZOOM
+                : INITIAL_VIEW_MAX_ZOOM,
             animate: duration > 0,
           },
         );
@@ -1990,6 +2000,8 @@ const sortedShops = [...shops].sort((left, right) =>
   .coffee-map-section .coffee-marker-wrapper {
     background: transparent;
     border: 0;
+    display: grid;
+    place-items: center;
   }
 
   .coffee-map-section .leaflet-marker-icon.is-filtered-out {
@@ -2285,8 +2297,8 @@ const sortedShops = [...shops].sort((left, right) =>
     }
 
     .coffee-marker {
-      width: 3rem;
-      height: 3rem;
+      width: 2.65rem;
+      height: 2.65rem;
     }
   }
 </style>
