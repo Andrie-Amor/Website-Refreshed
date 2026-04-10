@@ -664,7 +664,7 @@
           -122.424196,
           37.776635
         ],
-        "description": "general area is pretty nice",
+        "description": "hee hee like michael jackson",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/la-boulangerie-hayes-valley.jpg",
         "website": "http://www.laboulangeriesf.com/",
@@ -916,6 +916,7 @@
           -122.510694,
           37.772624
         ],
+        "description": "beach themed",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/andytown-coffee-roasters-ocean-beach.png",
         "website": "https://andytownsf.com/",
@@ -1209,6 +1210,7 @@
           -122.453458,
           37.769684
         ],
+        "description": "had warm coffee in a cold rainy day",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/flywheel-coffee-roasters.png",
         "website": "https://flywheelcoffee.com/",
@@ -1512,7 +1514,7 @@
           -122.410859,
           37.759365
         ],
-        "description": "felt like a hidden spot",
+        "description": "good ambiance",
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/sightglass-coffee.png",
         "website": "http://sightglasscoffee.com/",
@@ -1585,6 +1587,160 @@
                 "Sat"
               ],
               "label": "6:30 AM – 8 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "vive-la-tarte",
+        "name": "Vive La Tarte",
+        "coordinates": [
+          -122.43487,
+          37.75158
+        ],
+        "description": "vive la vida in vive la tarte",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/vive-la-tarte.jpeg",
+        "website": "https://www.vivelatarte.com/",
+        "neighborhood": "Noe Valley",
+        "address": "4026 24th St",
+        "addressUrl": "https://maps.app.goo.gl/xffn9qnXJperR3zX9",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 2 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "la-boulangerie-noe-valley",
+        "name": "La Boulangerie",
+        "coordinates": [
+          -122.42942,
+          37.75165
+        ],
+        "description": "lots of seating",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/la-boulangerie-noe-valley.jpg",
+        "website": "http://www.laboulangeriesf.com/",
+        "neighborhood": "Noe Valley",
+        "address": "3898 24th St",
+        "addressUrl": "https://maps.app.goo.gl/hMokH6Pphm2oxmpQ6",
+        "details": {
+          "wifi": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 4:30 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "temos-cafe",
+        "name": "Temo's Cafe",
+        "coordinates": [
+          -122.41141,
+          37.75247
+        ],
+        "description": "pink walls",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/temos-cafe.png",
+        "website": "https://temos-cafe-demo.com/Home",
+        "neighborhood": "Mission District",
+        "address": "3000 24th St",
+        "addressUrl": "https://maps.app.goo.gl/uyAwREbsyPeBw97m8",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "finjan-qahwa",
+        "name": "Finjan Qahwa",
+        "coordinates": [
+          -122.419,
+          37.74695
+        ],
+        "description": "good study spot far south downtown",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/finjan-qahwa.webp",
+        "website": "https://finjanqahwa.com/",
+        "neighborhood": "Mission District",
+        "address": "3188 Mission St",
+        "addressUrl": "https://maps.app.goo.gl/B1WYgSSq66GbQVvE6",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "7 AM – 10 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 11 PM"
             }
           ]
         }
