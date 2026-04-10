@@ -298,6 +298,7 @@ const sortedShops = [...shops].sort((left, right) =>
       const MIN_SIDEBAR_WIDTH = 248;
       const MAX_SIDEBAR_WIDTH = 448;
       const HIDE_SIDEBAR_THRESHOLD = 180;
+      const MARKER_ICON_SIZE = 54;
       const INITIAL_VIEW_ZOOM = 13;
       const INITIAL_VIEW_MAX_ZOOM = 14;
       const MOBILE_INITIAL_VIEW_MAX_ZOOM = 12;
@@ -306,6 +307,7 @@ const sortedShops = [...shops].sort((left, right) =>
       const MOBILE_SHEET_DEFAULT_HEIGHT = 128;
       let currentSidebarWidth = DEFAULT_SIDEBAR_WIDTH;
       let currentMobileSheetHeight = MOBILE_SHEET_DEFAULT_HEIGHT;
+      let markerBaselineZoom = INITIAL_VIEW_ZOOM;
 
       const map = L.map(mapContainer, {
         center: [center[1], center[0]],
@@ -370,6 +372,7 @@ const sortedShops = [...shops].sort((left, right) =>
         }
 
         isQueuedZoomActive = true;
+        syncMarkerScale(nextZoom);
         map.setZoomAround(
           queuedZoomPoint ?? map.getSize().divideBy(2),
           nextZoom,
@@ -504,6 +507,35 @@ const sortedShops = [...shops].sort((left, right) =>
       const isPhone = () => window.matchMedia("(max-width: 640px)").matches;
       const isSidebarHidden = () =>
         root.classList.contains("is-sidebar-hidden");
+      const getMarkerScaleForZoom = (zoom) => {
+        const zoomDelta = Math.max(0, markerBaselineZoom - zoom);
+
+        if (zoomDelta === 0) return 1;
+
+        if (isPhone()) {
+          return Math.max(0.64, 1 - zoomDelta * 0.24);
+        }
+
+        if (isCompact()) {
+          return Math.max(0.7, 1 - zoomDelta * 0.2);
+        }
+
+        return Math.max(0.76, 1 - zoomDelta * 0.18);
+      };
+      const syncMarkerScale = (zoom = map.getZoom()) => {
+        const markerScale = getMarkerScaleForZoom(zoom);
+
+        for (const markerElement of markerElements.values()) {
+          markerElement.style.setProperty(
+            "--marker-zoom-scale",
+            markerScale.toFixed(3),
+          );
+        }
+      };
+      const syncMarkerBaselineZoom = () => {
+        markerBaselineZoom = map.getZoom();
+        syncMarkerScale();
+      };
       const getMobileSheetMaxHeight = () => {
         const frameHeight =
           root.getBoundingClientRect().height || window.innerHeight;
@@ -685,8 +717,12 @@ const sortedShops = [...shops].sort((left, right) =>
                 : INITIAL_VIEW_MAX_ZOOM,
             animate: duration > 0,
           },
-        );
+          );
       };
+
+      map.on("zoomend", () => {
+        syncMarkerScale();
+      });
 
       const activePopup = L.popup({
         closeButton: false,
@@ -1127,8 +1163,8 @@ const sortedShops = [...shops].sort((left, right) =>
             icon: L.divIcon({
               html: markerElement.outerHTML,
               className: "coffee-marker-wrapper",
-              iconSize: [54, 54],
-              iconAnchor: [27, 27],
+              iconSize: [MARKER_ICON_SIZE, MARKER_ICON_SIZE],
+              iconAnchor: [MARKER_ICON_SIZE / 2, MARKER_ICON_SIZE / 2],
             }),
           })
             .addTo(map)
@@ -1355,6 +1391,7 @@ const sortedShops = [...shops].sort((left, right) =>
         syncSidebarWidth();
         syncSidebarVisibility();
         map.invalidateSize();
+        syncMarkerScale();
       });
       window.addEventListener("pagehide", () => {
         resizeObserver.disconnect();
@@ -1367,8 +1404,12 @@ const sortedShops = [...shops].sort((left, right) =>
         addMarkers();
 
         fitToInitialBounds(0);
+        syncMarkerBaselineZoom();
         requestAnimationFrame(() => map.invalidateSize());
-        requestAnimationFrame(() => fitToInitialBounds(1600));
+        requestAnimationFrame(() => {
+          map.once("moveend", syncMarkerBaselineZoom);
+          fitToInitialBounds(1600);
+        });
       });
     }
   }
@@ -1918,6 +1959,8 @@ const sortedShops = [...shops].sort((left, right) =>
 
   .coffee-marker {
     --marker-accent: #b77b5c;
+    --marker-zoom-scale: 1;
+    --marker-interaction-scale: 1;
     position: relative;
     width: 3.4rem;
     height: 3.4rem;
@@ -1925,13 +1968,18 @@ const sortedShops = [...shops].sort((left, right) =>
     border: 0;
     background: transparent;
     cursor: pointer;
-    transition: transform 180ms ease;
+    transform: scale(
+      calc(var(--marker-zoom-scale) * var(--marker-interaction-scale))
+    );
+    transform-origin: center;
+    transition: transform 250ms cubic-bezier(0, 0, 0.25, 1);
+    will-change: transform;
   }
 
   .coffee-marker:hover,
   .coffee-marker:focus-visible,
   .coffee-marker.is-active {
-    transform: scale(1.08);
+    --marker-interaction-scale: 1.08;
   }
 
   .coffee-marker__halo,
@@ -2000,8 +2048,7 @@ const sortedShops = [...shops].sort((left, right) =>
   .coffee-map-section .coffee-marker-wrapper {
     background: transparent;
     border: 0;
-    display: grid;
-    place-items: center;
+    display: block;
   }
 
   .coffee-map-section .leaflet-marker-icon.is-filtered-out {
