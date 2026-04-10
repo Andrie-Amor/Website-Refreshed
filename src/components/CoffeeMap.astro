@@ -23,6 +23,10 @@ const {
 
 const mapId = "favorite-coffee-map";
 const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const studySpotFilterDefinition = {
+  label: "Andre's Recommended Study Spots",
+  icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.8 4.8h10.4a1.8 1.8 0 0 1 1.8 1.8v12.6l-6.2-3.5-6.2 3.5V6.6a1.8 1.8 0 0 1 1.8-1.8Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8"/></svg>',
+} as const;
 const amenityDefinitions = {
   wifi: {
     label: "Wifi",
@@ -115,13 +119,15 @@ const sortedShops = [...shops].sort((left, right) =>
           aria-label="Resize coffee shop list"
           data-mobile-sheet-handle
         >
-          <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"></span>
+          <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"
+          ></span>
         </button>
 
         <div class="coffee-map-sidebar__header">
           <h2 id="coffee-map-title">{title}</h2>
           <p class="coffee-map-sidebar__summary" data-filter-summary>
-            {shops.length} {shops.length === 1 ? "shop" : "shops"}
+            {shops.length}
+            {shops.length === 1 ? "shop" : "shops"}
           </p>
         </div>
 
@@ -134,51 +140,77 @@ const sortedShops = [...shops].sort((left, right) =>
               <span class="coffee-map-filter-group__label">Amenities</span>
             </summary>
             <div class="coffee-map-filter-group__options">
-              {(
-                Object.entries(amenityDefinitions) as Array<
-                  [
-                    keyof typeof amenityDefinitions,
-                    (typeof amenityDefinitions)[keyof typeof amenityDefinitions],
-                  ]
-                >
-              ).map(([amenity, definition]) => (
-                <button
-                  class="coffee-map-filter coffee-map-filter--amenity"
-                  type="button"
-                  data-amenity-filter={amenity}
-                  aria-pressed="false"
-                  aria-label={`Filter by ${definition.label.toLowerCase()}`}
-                  title={`Filter by ${definition.label.toLowerCase()}`}
-                >
-                  <span
-                    class="coffee-map-filter__icon"
-                    set:html={definition.icon}
-                  />
-                  <span class="coffee-map-filter__label">{definition.label}</span>
-                </button>
-              ))}
+              {
+                (
+                  Object.entries(amenityDefinitions) as Array<
+                    [
+                      keyof typeof amenityDefinitions,
+                      (typeof amenityDefinitions)[keyof typeof amenityDefinitions],
+                    ]
+                  >
+                ).map(([amenity, definition]) => (
+                  <button
+                    class="coffee-map-filter coffee-map-filter--amenity"
+                    type="button"
+                    data-amenity-filter={amenity}
+                    aria-pressed="false"
+                    aria-label={`Filter by ${definition.label.toLowerCase()}`}
+                    title={`Filter by ${definition.label.toLowerCase()}`}
+                  >
+                    <span
+                      class="coffee-map-filter__icon"
+                      set:html={definition.icon}
+                    />
+                    <span class="coffee-map-filter__label">
+                      {definition.label}
+                    </span>
+                  </button>
+                ))
+              }
+            </div>
+            <div class="coffee-map-filter-group__secondary">
+              <button
+                class="coffee-map-filter coffee-map-filter--study-spot"
+                type="button"
+                data-study-spot-filter
+                aria-pressed="false"
+                aria-label={`Filter by ${studySpotFilterDefinition.label.toLowerCase()}`}
+                title={studySpotFilterDefinition.label}
+              >
+                <span
+                  class="coffee-map-filter__icon"
+                  set:html={studySpotFilterDefinition.icon}
+                />
+                <span class="coffee-map-filter__label">
+                  {studySpotFilterDefinition.label}
+                </span>
+              </button>
             </div>
           </details>
 
-          {neighborhoodOptions.length > 0 && (
-            <details class="coffee-map-filter-group">
-              <summary class="coffee-map-filter-group__summary">
-                <span class="coffee-map-filter-group__label">Neighborhood</span>
-              </summary>
-              <div class="coffee-map-filter-group__options">
-                {neighborhoodOptions.map((neighborhood) => (
-                  <button
-                    class="coffee-map-filter"
-                    type="button"
-                    data-neighborhood-filter={neighborhood}
-                    aria-pressed="false"
-                  >
-                    {neighborhood}
-                  </button>
-                ))}
-              </div>
-            </details>
-          )}
+          {
+            neighborhoodOptions.length > 0 && (
+              <details class="coffee-map-filter-group">
+                <summary class="coffee-map-filter-group__summary">
+                  <span class="coffee-map-filter-group__label">
+                    Neighborhood
+                  </span>
+                </summary>
+                <div class="coffee-map-filter-group__options">
+                  {neighborhoodOptions.map((neighborhood) => (
+                    <button
+                      class="coffee-map-filter"
+                      type="button"
+                      data-neighborhood-filter={neighborhood}
+                      aria-pressed="false"
+                    >
+                      {neighborhood}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            )
+          }
         </div>
       </div>
 
@@ -277,6 +309,9 @@ const sortedShops = [...shops].sort((left, right) =>
     const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
     const amenityFilterButtons = Array.from(
       root.querySelectorAll("[data-amenity-filter]"),
+    );
+    const studySpotFilterButton = root.querySelector(
+      "[data-study-spot-filter]",
     );
     const neighborhoodFilterButtons = Array.from(
       root.querySelectorAll("[data-neighborhood-filter]"),
@@ -501,6 +536,7 @@ const sortedShops = [...shops].sort((left, right) =>
       const shopsById = new Map(shops.map((shop) => [shop.id, shop]));
       const activeAmenityFilters = new Set();
       const activeNeighborhoodFilters = new Set();
+      let recommendedStudySpotOnly = false;
       let visibleShopIds = new Set(shops.map((shop) => shop.id));
       let activeShopId = null;
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
@@ -717,7 +753,7 @@ const sortedShops = [...shops].sort((left, right) =>
                 : INITIAL_VIEW_MAX_ZOOM,
             animate: duration > 0,
           },
-          );
+        );
       };
 
       map.on("zoomend", () => {
@@ -746,14 +782,22 @@ const sortedShops = [...shops].sort((left, right) =>
           activeNeighborhoodFilters.size === 0 ||
           (Boolean(neighborhood) &&
             activeNeighborhoodFilters.has(neighborhood));
+        const matchesRecommendedStudySpot =
+          !recommendedStudySpotOnly || Boolean(shop.recommendedStudySpot);
 
-        return matchesAmenities && matchesNeighborhoods;
+        return (
+          matchesAmenities &&
+          matchesNeighborhoods &&
+          matchesRecommendedStudySpot
+        );
       };
       const syncFilterSummary = (count) => {
         if (!(filterSummary instanceof HTMLElement)) return;
 
         const filtersActive =
-          activeAmenityFilters.size > 0 || activeNeighborhoodFilters.size > 0;
+          recommendedStudySpotOnly ||
+          activeAmenityFilters.size > 0 ||
+          activeNeighborhoodFilters.size > 0;
         const noun = count === 1 ? "shop" : "shops";
 
         filterSummary.textContent = filtersActive
@@ -779,6 +823,17 @@ const sortedShops = [...shops].sort((left, right) =>
 
           button.classList.toggle("is-active", isActive);
           button.setAttribute("aria-pressed", String(isActive));
+        }
+
+        if (studySpotFilterButton instanceof HTMLButtonElement) {
+          studySpotFilterButton.classList.toggle(
+            "is-active",
+            recommendedStudySpotOnly,
+          );
+          studySpotFilterButton.setAttribute(
+            "aria-pressed",
+            String(recommendedStudySpotOnly),
+          );
         }
       };
       const applyFilters = () => {
@@ -1028,10 +1083,7 @@ const sortedShops = [...shops].sort((left, right) =>
           const topPadding = 24;
           const bottomPadding = currentMobileSheetHeight + 24;
           const projectedPoint = map.project(targetLatLng, zoom);
-          const offsetPoint = L.point(
-            0,
-            (topPadding - bottomPadding) / 2,
-          );
+          const offsetPoint = L.point(0, (topPadding - bottomPadding) / 2);
           const centeredLatLng = map.unproject(
             projectedPoint.subtract(offsetPoint),
             zoom,
@@ -1218,6 +1270,13 @@ const sortedShops = [...shops].sort((left, right) =>
             activeNeighborhoodFilters.add(neighborhood);
           }
 
+          applyFilters();
+        });
+      }
+
+      if (studySpotFilterButton instanceof HTMLButtonElement) {
+        studySpotFilterButton.addEventListener("click", () => {
+          recommendedStudySpotOnly = !recommendedStudySpotOnly;
           applyFilters();
         });
       }
@@ -1496,8 +1555,7 @@ const sortedShops = [...shops].sort((left, right) =>
     transition: background-color 180ms ease;
   }
 
-  .coffee-map-sidebar__sheet-handle:hover
-    .coffee-map-sidebar__sheet-grip,
+  .coffee-map-sidebar__sheet-handle:hover .coffee-map-sidebar__sheet-grip,
   .coffee-map-sidebar__sheet-handle:focus-visible
     .coffee-map-sidebar__sheet-grip {
     background: rgba(90, 90, 90, 0.7);
@@ -1628,7 +1686,7 @@ const sortedShops = [...shops].sort((left, right) =>
   }
 
   .coffee-map-sidebar__summary {
-    margin: 0.15rem 0 0;
+    margin: 0;
     color: #666;
     font-size: 0.8rem;
     line-height: 1.35;
@@ -1739,6 +1797,11 @@ const sortedShops = [...shops].sort((left, right) =>
     padding: 0 0.85rem 0.75rem;
   }
 
+  .coffee-map-filter-group__secondary {
+    display: flex;
+    padding: 0 0.85rem 0.8rem;
+  }
+
   .coffee-map-filter {
     display: inline-flex;
     align-items: center;
@@ -1764,6 +1827,18 @@ const sortedShops = [...shops].sort((left, right) =>
 
   .coffee-map-filter--amenity {
     padding-inline: 0.66rem 0.78rem;
+  }
+
+  .coffee-map-filter--study-spot {
+    justify-content: flex-start;
+    min-height: 2.1rem;
+    padding: 0.54rem 0.8rem;
+    text-align: left;
+  }
+
+  .coffee-map-filter--study-spot .coffee-map-filter__label {
+    white-space: normal;
+    line-height: 1.28;
   }
 
   .coffee-map-filter:hover,

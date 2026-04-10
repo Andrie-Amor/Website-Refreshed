@@ -15,6 +15,7 @@
           37.78877
         ],
         "description": "Capital One!",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/capital-one-cafe.jpg",
         "website": "https://www.capitalone.com/local/sanfrancisco-unionsquare/",
@@ -93,6 +94,7 @@
           37.7926
         ],
         "description": "studied here a few times",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/blue-bottle-pac-heights.jpeg",
         "website": "https://bluebottlecoffee.com/us/eng",
@@ -127,6 +129,7 @@
           37.771107
         ],
         "description": "good spot if you need to go to chase center",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/blue-bottle-mission-bay.jpeg",
         "website": "https://bluebottlecoffee.com/us/eng",
@@ -135,6 +138,7 @@
         "addressUrl": "https://maps.app.goo.gl/N3CRPMqaUpMQfGgN6",
         "details": {
           "wifi": true,
+          "sockets": true,
           "seating": true,
           "hours": [
             {
@@ -160,6 +164,7 @@
           37.785719
         ],
         "description": "Jane Street reference",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/jane-on-third.png",
         "website": "https://www.itsjane.com/menu/jane-on-third/",
@@ -235,6 +240,7 @@
           37.765992
         ],
         "description": "really good croissants",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/la-boulangerie.jpg",
         "website": "https://www.laboulangeriesf.com/",
@@ -312,6 +318,7 @@
           37.7636
         ],
         "description": "inside ucsf! pretty good study spot",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/caffe-central.webp",
         "neighborhood": "Parnassus Heights",
@@ -395,6 +402,7 @@
           37.771057
         ],
         "description": "one of the first coffee shops I went to in SF!",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/cafe-reveille.webp",
         "website": "https://www.cafereveille.com/",
@@ -524,6 +532,7 @@
           37.287676
         ],
         "description": "used to study here all the time\nfriend met his girlfriend here",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/stardust-coffee-house.jpg",
         "website": "https://www.stardustsuper.com/",
@@ -631,6 +640,7 @@
           37.795116
         ],
         "description": "love this spot",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/cafe-reveille-polk-street.webp",
         "website": "http://cafereveille.com/",
@@ -665,6 +675,7 @@
           37.776635
         ],
         "description": "hee hee like michael jackson",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/la-boulangerie-hayes-valley.jpg",
         "website": "http://www.laboulangeriesf.com/",
@@ -752,6 +763,7 @@
           37.774709
         ],
         "description": "diamond in the rough",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/heyma-yemeni-coffee.png",
         "website": "https://www.heymacoffeeca.com/",
@@ -874,6 +886,7 @@
           37.782321
         ],
         "description": "one of the better study spots",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/home-coffee-roasters.jpg",
         "website": "http://homecoffeesf.com/",
@@ -1275,7 +1288,8 @@
           -122.4187,
           37.7809
         ],
-        "description": "government coffee shop type of environment",
+        "description": "lab made?? 🤔",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/spro-coffee-lab.jpeg",
         "website": "https://sprocoffeelab.com/",
@@ -1361,6 +1375,7 @@
           37.762
         ],
         "description": "absolutely incredible rosca de coco",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/cafe-de-casa.jpg",
         "website": "http://www.cafedecasa.com/",
@@ -1631,6 +1646,7 @@
           37.75165
         ],
         "description": "lots of seating",
+        "recommendedStudySpot": true,
         "accent": "#8b6f60",
         "logoPath": "/images/coffee-logos/la-boulangerie-noe-valley.jpg",
         "website": "http://www.laboulangeriesf.com/",

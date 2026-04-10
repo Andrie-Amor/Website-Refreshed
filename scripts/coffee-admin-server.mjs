@@ -36,7 +36,12 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
-function sendText(response, statusCode, text, contentType = "text/plain; charset=utf-8") {
+function sendText(
+  response,
+  statusCode,
+  text,
+  contentType = "text/plain; charset=utf-8",
+) {
   response.writeHead(statusCode, {
     "content-type": contentType,
     "cache-control": "no-store",
@@ -55,7 +60,9 @@ function slugify(value) {
 }
 
 function compactString(value) {
-  return String(value ?? "").trim().replace(/\s+/g, " ");
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function optionalString(value) {
@@ -103,9 +110,7 @@ function optionalBoolean(value) {
 function normalizeHours(rawHours) {
   if (typeof rawHours === "string") {
     const label = optionalString(rawHours);
-    return label
-      ? [{ days: [...DAY_ORDER], label }]
-      : undefined;
+    return label ? [{ days: [...DAY_ORDER], label }] : undefined;
   }
 
   if (!Array.isArray(rawHours)) {
@@ -170,6 +175,7 @@ function ensureShopPayload(rawShop) {
     name,
     coordinates: [longitude, latitude],
     description: optionalMultilineString(rawShop?.description),
+    recommendedStudySpot: optionalBoolean(rawShop?.recommendedStudySpot),
     accent: normalizeAccent(rawShop?.accent),
     logoPath:
       typeof rawShop?.logoPath === "string" && rawShop.logoPath.startsWith("/")
@@ -189,7 +195,11 @@ async function readDataFile() {
 }
 
 async function writeDataFile(payload) {
-  await writeFile(DATA_FILE_PATH, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  await writeFile(
+    DATA_FILE_PATH,
+    `${JSON.stringify(payload, null, 2)}\n`,
+    "utf8",
+  );
 }
 
 function collectAllShops(data) {
@@ -197,13 +207,17 @@ function collectAllShops(data) {
 }
 
 function isManagedLogoPath(logoPath) {
-  return typeof logoPath === "string" && logoPath.startsWith(LOGO_PUBLIC_PREFIX);
+  return (
+    typeof logoPath === "string" && logoPath.startsWith(LOGO_PUBLIC_PREFIX)
+  );
 }
 
 async function maybeDeleteManagedLogo(logoPath, data) {
   if (!isManagedLogoPath(logoPath)) return;
 
-  const stillUsed = collectAllShops(data).some((shop) => shop.logoPath === logoPath);
+  const stillUsed = collectAllShops(data).some(
+    (shop) => shop.logoPath === logoPath,
+  );
   if (stillUsed) return;
 
   const absolutePath = path.join(PUBLIC_DIR, logoPath.replace(/^\//, ""));
@@ -218,7 +232,11 @@ async function maybeDeleteManagedLogo(logoPath, data) {
 
 function extensionFromUpload(upload) {
   const originalExtension = path.extname(upload.filename || "").toLowerCase();
-  if ([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(originalExtension)) {
+  if (
+    [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(
+      originalExtension,
+    )
+  ) {
     return originalExtension;
   }
 
@@ -336,11 +354,12 @@ async function handleSaveShop(request, response) {
     ...normalizedShop,
     accent: hasAccentOverride
       ? normalizedShop.accent
-      : existingShop?.accent ?? normalizedShop.accent,
+      : (existingShop?.accent ?? normalizedShop.accent),
     logoPath: nextLogoPath,
   };
 
   if (!nextShop.description) delete nextShop.description;
+  if (!nextShop.recommendedStudySpot) delete nextShop.recommendedStudySpot;
   if (!nextShop.website) delete nextShop.website;
   if (!nextShop.neighborhood) delete nextShop.neighborhood;
   if (!nextShop.address) delete nextShop.address;
@@ -873,6 +892,14 @@ const ADMIN_PAGE_HTML = `<!doctype html>
                 </div>
 
                 <div class="field-group col-span-2">
+                  <label>Study Spot</label>
+                  <div class="toggle-row" role="group" aria-label="Study spot">
+                    <button type="button" class="toggle-chip" data-detail-toggle="recommendedStudySpot" aria-pressed="false">Recommend Study Spot</button>
+                  </div>
+                  <input id="recommendedStudySpot" name="recommendedStudySpot" type="hidden" />
+                </div>
+
+                <div class="field-group col-span-2">
                   <label>Hours</label>
                   <div class="hours-grid">
                     <label class="hours-row">
@@ -1109,6 +1136,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
           name: "",
           coordinates: city?.center ? [city.center[0], city.center[1]] : [-122.433, 37.764],
           description: "",
+          recommendedStudySpot: false,
           logoPath: "",
           website: "",
           neighborhood: "",
@@ -1160,6 +1188,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
         document.getElementById("address").value = shop.address || "";
         document.getElementById("address-url").value = shop.addressUrl || "";
         document.getElementById("description").value = shop.description || "";
+        document.getElementById("recommendedStudySpot").value = shop.recommendedStudySpot ? ACTIVE_DETAIL_VALUE : "";
         fillHoursInputs(shop.details?.hours || []);
         document.getElementById("wifi").value = shop.details?.wifi ? ACTIVE_DETAIL_VALUE : "";
         document.getElementById("sockets").value = shop.details?.sockets ? ACTIVE_DETAIL_VALUE : "";
@@ -1262,6 +1291,7 @@ const ADMIN_PAGE_HTML = `<!doctype html>
             address: document.getElementById("address").value,
             addressUrl: document.getElementById("address-url").value,
             description: document.getElementById("description").value,
+            recommendedStudySpot: document.getElementById("recommendedStudySpot").value,
             details: {
               hours: buildHoursSchedule(),
               wifi: document.getElementById("wifi").value,
@@ -1456,7 +1486,10 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "GET" && requestUrl.pathname.startsWith("/images/")) {
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname.startsWith("/images/")
+    ) {
       await servePublicAsset(response, requestUrl.pathname);
       return;
     }

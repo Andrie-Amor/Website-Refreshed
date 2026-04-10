@@ -17,6 +17,7 @@ export type CoffeeShop = {
   name: string;
   coordinates: [number, number];
   description?: string;
+  recommendedStudySpot?: boolean;
   accent: string;
   logoPath: string;
   website?: string;
