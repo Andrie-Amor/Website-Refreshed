@@ -1760,6 +1760,92 @@
             }
           ]
         }
+      },
+      {
+        "id": "golden-goat-coffee",
+        "name": "Golden Goat Coffee",
+        "coordinates": [
+          -122.39474,
+          37.78057
+        ],
+        "description": "lots of VCs and founders here\nright next to SPC",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/golden-goat-coffee.jpg",
+        "website": "http://goldengoatcoffee.com/",
+        "neighborhood": "SoMa",
+        "address": "599 3rd St #100",
+        "addressUrl": "https://maps.app.goo.gl/LJdmm1P6rLRpi7au8",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "Closed"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "8 AM – 3 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "9 AM – 2 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "joe-the-juice",
+        "name": "Joe & The Juice",
+        "coordinates": [
+          -122.391134,
+          37.773477
+        ],
+        "description": "lots of seating to do work",
+        "recommendedStudySpot": true,
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/joe-the-juice.png",
+        "website": "https://www.joejuice.com/",
+        "neighborhood": "Mission Bay",
+        "address": "1155 4th St",
+        "addressUrl": "https://maps.app.goo.gl/FL8R2aHyekTrpKhG6",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 7 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6 AM – 7 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 7 PM"
+            }
+          ]
+        }
       }
     ]
   }
