@@ -1846,6 +1846,49 @@
             }
           ]
         }
+      },
+      {
+        "id": "sightglass-coffee-soma",
+        "name": "Sightglass Coffee",
+        "coordinates": [
+          -122.40844,
+          37.777034
+        ],
+        "description": "good coffee and lots of seating",
+        "recommendedStudySpot": true,
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/sightglass-coffee-soma.webp",
+        "website": "https://sightglasscoffee.com/",
+        "neighborhood": "SoMa",
+        "address": "270 7th St",
+        "addressUrl": "https://maps.app.goo.gl/sgPGgNsnmAgUU1xf9",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6:30 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
       }
     ]
   }
