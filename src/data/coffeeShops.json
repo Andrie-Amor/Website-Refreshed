@@ -1889,6 +1889,157 @@
             }
           ]
         }
+      },
+      {
+        "id": "home-coffee-roasters-sunset",
+        "name": "Home Coffee Roasters",
+        "coordinates": [
+          -122.476667,
+          37.753978
+        ],
+        "description": "ube bread!",
+        "recommendedStudySpot": true,
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/home-coffee-roasters-sunset.jpg",
+        "website": "https://homecoffeesf.com/pages/noriega",
+        "neighborhood": "Outer Sunset",
+        "address": "1222 Noriega St",
+        "addressUrl": "https://maps.app.goo.gl/SBEWTs3fk6YH7Y9R9",
+        "details": {
+          "wifi": true,
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7:30 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "henry-s-house-of-coffee",
+        "name": "Henry's House of Coffee",
+        "coordinates": [
+          -122.480463,
+          37.754042
+        ],
+        "description": "love seeing open roasteries",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/henry-s-house-of-coffee.jpg",
+        "website": "http://www.henryshouseofcoffee.com/",
+        "neighborhood": "Outer Sunset",
+        "address": "1618 Noriega St",
+        "addressUrl": "https://maps.app.goo.gl/8qHgMoS2KP2bZk2Y9",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "6 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "andytown-coffee-roasters-sunset",
+        "name": "Andytown Coffee Roasters",
+        "coordinates": [
+          -122.503414,
+          37.756318
+        ],
+        "description": "nice shade in a hot sunny day",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/andytown-coffee-roasters-sunset.png",
+        "website": "http://www.andytownsf.com/",
+        "neighborhood": "Outer Sunset",
+        "address": "3655 Lawton St",
+        "addressUrl": "https://maps.app.goo.gl/Vrqex9GGECiAfpRn6",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "java-beach-cafe",
+        "name": "Java Beach Cafe",
+        "coordinates": [
+          -122.50902,
+          37.761438
+        ],
+        "description": "nice beach spot 🏄",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/java-beach-cafe.png",
+        "website": "https://javabeachcafe.com/javabeachcafejudah",
+        "neighborhood": "Outer Sunset",
+        "address": "1396 La Playa St",
+        "addressUrl": "https://maps.app.goo.gl/inoTbS8VhtWns9Sb9",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "7 AM – 5 PM"
+            }
+          ]
+        }
       }
     ]
   }
