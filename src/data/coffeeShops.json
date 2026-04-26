@@ -2040,6 +2040,174 @@
             }
           ]
         }
+      },
+      {
+        "id": "california-bakery",
+        "name": "California Bakery",
+        "coordinates": [
+          -122.4732,
+          37.7436
+        ],
+        "description": "can never get enough almond croissants",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/california-bakery.png",
+        "website": "https://order.online/store/california-bakery-taraval-st-1102848",
+        "neighborhood": "Outer Sunset",
+        "address": "719 Taraval St",
+        "addressUrl": "https://maps.app.goo.gl/8tsdcmhNBFiacr2U7",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 6 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "el-cafe",
+        "name": "El Cafe",
+        "coordinates": [
+          -122.48137,
+          37.74303
+        ],
+        "description": "very friendly staff, good spot to read",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/el-cafe.png",
+        "website": "https://elcafesf.com/",
+        "neighborhood": "Outer Sunset",
+        "address": "1400 Taraval St",
+        "addressUrl": "https://maps.app.goo.gl/fAVFHpQyj3jYLV8q9",
+        "details": {
+          "sockets": true,
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "7:30 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed"
+              ],
+              "label": "6 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Thu"
+              ],
+              "label": "9 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Fri"
+              ],
+              "label": "6 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "7:30 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "andytown-roastery-outer-sunset-2",
+        "name": "Andytown Roastery",
+        "coordinates": [
+          -122.49839,
+          37.7422
+        ],
+        "description": "pure roastery",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/andytown-roastery-outer-sunset-2.png",
+        "website": "http://andytownsf.com/",
+        "neighborhood": "Outer Sunset",
+        "address": "3016 Taraval St",
+        "addressUrl": "https://maps.app.goo.gl/mTb5kbVLd6txfu5Y7",
+        "details": {
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 4 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri"
+              ],
+              "label": "7 AM – 3 PM"
+            },
+            {
+              "days": [
+                "Sat"
+              ],
+              "label": "8 AM – 4 PM"
+            }
+          ]
+        }
+      },
+      {
+        "id": "andytown-coffee-roasters",
+        "name": "Andytown Coffee Roasters",
+        "coordinates": [
+          -122.50502,
+          37.74154
+        ],
+        "description": "why are there two andytown roasters next to each other",
+        "accent": "#8b6f60",
+        "logoPath": "/images/coffee-logos/andytown-coffee-roasters.png",
+        "website": "http://andytownsf.com/",
+        "neighborhood": "Outer Sunset",
+        "address": "3629 Taraval St",
+        "addressUrl": "https://maps.app.goo.gl/EcBwQXrw3aXCf7Dy7",
+        "details": {
+          "seating": true,
+          "hours": [
+            {
+              "days": [
+                "Sun"
+              ],
+              "label": "8 AM – 5 PM"
+            },
+            {
+              "days": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu"
+              ],
+              "label": "8 AM – 3 PM"
+            },
+            {
+              "days": [
+                "Fri",
+                "Sat"
+              ],
+              "label": "8 AM – 5 PM"
+            }
+          ]
+        }
       }
     ]
   }
