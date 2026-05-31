@@ -36,12 +36,7 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
-function sendText(
-  response,
-  statusCode,
-  text,
-  contentType = "text/plain; charset=utf-8",
-) {
+function sendText(response, statusCode, text, contentType = "text/plain; charset=utf-8") {
   response.writeHead(statusCode, {
     "content-type": contentType,
     "cache-control": "no-store",
@@ -143,9 +138,7 @@ function normalizeDetails(rawDetails) {
     hours: normalizeHours(rawDetails?.hours),
   };
 
-  return Object.fromEntries(
-    Object.entries(details).filter(([, value]) => value),
-  );
+  return Object.fromEntries(Object.entries(details).filter(([, value]) => value));
 }
 
 function ensureShopPayload(rawShop) {
@@ -163,10 +156,7 @@ function ensureShopPayload(rawShop) {
     rawShop?.coordinates?.[0] ?? rawShop?.longitude,
     "Longitude",
   );
-  const latitude = normalizeCoordinate(
-    rawShop?.coordinates?.[1] ?? rawShop?.latitude,
-    "Latitude",
-  );
+  const latitude = normalizeCoordinate(rawShop?.coordinates?.[1] ?? rawShop?.latitude, "Latitude");
 
   const details = normalizeDetails(rawShop?.details);
 
@@ -195,11 +185,7 @@ async function readDataFile() {
 }
 
 async function writeDataFile(payload) {
-  await writeFile(
-    DATA_FILE_PATH,
-    `${JSON.stringify(payload, null, 2)}\n`,
-    "utf8",
-  );
+  await writeFile(DATA_FILE_PATH, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
 function collectAllShops(data) {
@@ -207,17 +193,13 @@ function collectAllShops(data) {
 }
 
 function isManagedLogoPath(logoPath) {
-  return (
-    typeof logoPath === "string" && logoPath.startsWith(LOGO_PUBLIC_PREFIX)
-  );
+  return typeof logoPath === "string" && logoPath.startsWith(LOGO_PUBLIC_PREFIX);
 }
 
 async function maybeDeleteManagedLogo(logoPath, data) {
   if (!isManagedLogoPath(logoPath)) return;
 
-  const stillUsed = collectAllShops(data).some(
-    (shop) => shop.logoPath === logoPath,
-  );
+  const stillUsed = collectAllShops(data).some((shop) => shop.logoPath === logoPath);
   if (stillUsed) return;
 
   const absolutePath = path.join(PUBLIC_DIR, logoPath.replace(/^\//, ""));
@@ -232,11 +214,7 @@ async function maybeDeleteManagedLogo(logoPath, data) {
 
 function extensionFromUpload(upload) {
   const originalExtension = path.extname(upload.filename || "").toLowerCase();
-  if (
-    [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(
-      originalExtension,
-    )
-  ) {
+  if ([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(originalExtension)) {
     return originalExtension;
   }
 
@@ -1486,10 +1464,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (
-      request.method === "GET" &&
-      requestUrl.pathname.startsWith("/images/")
-    ) {
+    if (request.method === "GET" && requestUrl.pathname.startsWith("/images/")) {
       await servePublicAsset(response, requestUrl.pathname);
       return;
     }

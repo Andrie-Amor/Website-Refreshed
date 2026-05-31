@@ -65,13 +65,12 @@ const formatDayRange = (days: string[]) => {
 const formatHoursEntry = (entry: CoffeeShopHoursEntry) =>
   `${formatDayRange(entry.days)} ${entry.label}`;
 
-const getSidebarMeta = (shop: CoffeeShop) =>
-  [shop.neighborhood].filter(Boolean).join(" • ");
+const getSidebarMeta = (shop: CoffeeShop) => [shop.neighborhood].filter(Boolean).join(" • ");
 
 const getVisibleAmenities = (shop: CoffeeShop) =>
-  (
-    Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>
-  ).filter((key) => Boolean(shop.details?.[key]));
+  (Object.keys(amenityDefinitions) as Array<keyof typeof amenityDefinitions>).filter((key) =>
+    Boolean(shop.details?.[key]),
+  );
 
 const neighborhoodOptions = Array.from(
   new Set(
@@ -81,9 +80,7 @@ const neighborhoodOptions = Array.from(
   ),
 ).sort((left, right) => left.localeCompare(right));
 
-const sortedShops = [...shops].sort((left, right) =>
-  left.name.localeCompare(right.name),
-);
+const sortedShops = [...shops].sort((left, right) => left.name.localeCompare(right.name));
 ---
 
 <section
@@ -104,7 +101,9 @@ const sortedShops = [...shops].sort((left, right) =>
       type="button"
       aria-controls="coffee-map-sidebar"
       aria-label="Open sidebar"
-      data-sidebar-reopen></button>
+      data-sidebar-reopen
+    >
+    </button>
 
     <aside
       id="coffee-map-sidebar"
@@ -119,8 +118,7 @@ const sortedShops = [...shops].sort((left, right) =>
           aria-label="Resize coffee shop list"
           data-mobile-sheet-handle
         >
-          <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"
-          ></span>
+          <span class="coffee-map-sidebar__sheet-grip" aria-hidden="true"></span>
         </button>
 
         <div class="coffee-map-sidebar__header">
@@ -131,10 +129,7 @@ const sortedShops = [...shops].sort((left, right) =>
           </p>
         </div>
 
-        <div
-          class="coffee-map-sidebar__filters"
-          aria-label="Filter coffee shops"
-        >
+        <div class="coffee-map-sidebar__filters" aria-label="Filter coffee shops">
           <details class="coffee-map-filter-group">
             <summary class="coffee-map-filter-group__summary">
               <span class="coffee-map-filter-group__label">Amenities</span>
@@ -157,13 +152,8 @@ const sortedShops = [...shops].sort((left, right) =>
                     aria-label={`Filter by ${definition.label.toLowerCase()}`}
                     title={`Filter by ${definition.label.toLowerCase()}`}
                   >
-                    <span
-                      class="coffee-map-filter__icon"
-                      set:html={definition.icon}
-                    />
-                    <span class="coffee-map-filter__label">
-                      {definition.label}
-                    </span>
+                    <span class="coffee-map-filter__icon" set:html={definition.icon} />
+                    <span class="coffee-map-filter__label">{definition.label}</span>
                   </button>
                 ))
               }
@@ -177,10 +167,7 @@ const sortedShops = [...shops].sort((left, right) =>
                 aria-label={`Filter by ${studySpotFilterDefinition.label.toLowerCase()}`}
                 title={studySpotFilterDefinition.label}
               >
-                <span
-                  class="coffee-map-filter__icon"
-                  set:html={studySpotFilterDefinition.icon}
-                />
+                <span class="coffee-map-filter__icon" set:html={studySpotFilterDefinition.icon} />
                 <span class="coffee-map-filter__label">
                   {studySpotFilterDefinition.label}
                 </span>
@@ -192,9 +179,7 @@ const sortedShops = [...shops].sort((left, right) =>
             neighborhoodOptions.length > 0 && (
               <details class="coffee-map-filter-group">
                 <summary class="coffee-map-filter-group__summary">
-                  <span class="coffee-map-filter-group__label">
-                    Neighborhood
-                  </span>
+                  <span class="coffee-map-filter-group__label">Neighborhood</span>
                 </summary>
                 <div class="coffee-map-filter-group__options">
                   {neighborhoodOptions.map((neighborhood) => (
@@ -237,9 +222,7 @@ const sortedShops = [...shops].sort((left, right) =>
                   <span class="coffee-shop-item__identity">
                     <span class="coffee-shop-item__name">{shop.name}</span>
                     {getSidebarMeta(shop) && (
-                      <span class="coffee-shop-item__meta">
-                        {getSidebarMeta(shop)}
-                      </span>
+                      <span class="coffee-shop-item__meta">{getSidebarMeta(shop)}</span>
                     )}
                   </span>
                   {getVisibleAmenities(shop).length > 0 && (
@@ -254,17 +237,13 @@ const sortedShops = [...shops].sort((left, right) =>
                             class="coffee-shop-chip__icon"
                             set:html={amenityDefinitions[amenity].icon}
                           />
-                          <span class="sr-only">
-                            {amenityDefinitions[amenity].label}
-                          </span>
+                          <span class="sr-only">{amenityDefinitions[amenity].label}</span>
                         </span>
                       ))}
                     </span>
                   )}
                 </span>
-                {shop.address && (
-                  <span class="coffee-shop-item__address">{shop.address}</span>
-                )}
+                {shop.address && <span class="coffee-shop-item__address">{shop.address}</span>}
               </span>
             </button>
           ))
@@ -292,14 +271,11 @@ const sortedShops = [...shops].sort((left, right) =>
 
   if (root instanceof HTMLElement) {
     const DAY_ORDER = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const amenityDefinitions = JSON.parse(
-      root.dataset.amenityDefinitions ?? "{}",
-    );
+    const amenityDefinitions = JSON.parse(root.dataset.amenityDefinitions ?? "{}");
     const shops = JSON.parse(root.dataset.shops ?? "[]");
     const center = JSON.parse(root.dataset.center ?? "[-122.433, 37.764]");
     const initialBounds = JSON.parse(
-      root.dataset.initialBounds ??
-        "[[-122.4326, 37.78215], [-122.4254, 37.78785]]",
+      root.dataset.initialBounds ?? "[[-122.4326, 37.78215], [-122.4254, 37.78785]]",
     );
     const mapContainer = root.querySelector("[data-map-canvas]");
     const sidebar = root.querySelector("[data-sidebar]");
@@ -307,12 +283,8 @@ const sortedShops = [...shops].sort((left, right) =>
     const sidebarReopen = root.querySelector("[data-sidebar-reopen]");
     const mobileSheetHandle = root.querySelector("[data-mobile-sheet-handle]");
     const listItems = Array.from(root.querySelectorAll("[data-shop-item]"));
-    const amenityFilterButtons = Array.from(
-      root.querySelectorAll("[data-amenity-filter]"),
-    );
-    const studySpotFilterButton = root.querySelector(
-      "[data-study-spot-filter]",
-    );
+    const amenityFilterButtons = Array.from(root.querySelectorAll("[data-amenity-filter]"));
+    const studySpotFilterButton = root.querySelector("[data-study-spot-filter]");
     const neighborhoodFilterButtons = Array.from(
       root.querySelectorAll("[data-neighborhood-filter]"),
     );
@@ -327,8 +299,7 @@ const sortedShops = [...shops].sort((left, right) =>
     ) {
       mapContainer.dataset.initialized = "true";
 
-      const tileUrl =
-        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+      const tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
       const DEFAULT_SIDEBAR_WIDTH = 352;
       const MIN_SIDEBAR_WIDTH = 248;
       const MAX_SIDEBAR_WIDTH = 448;
@@ -378,8 +349,7 @@ const sortedShops = [...shops].sort((left, right) =>
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
       }).addTo(map);
 
-      const clampZoom = (zoom) =>
-        Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
+      const clampZoom = (zoom) => Math.min(map.getMaxZoom(), Math.max(map.getMinZoom(), zoom));
       const PINCH_ZOOM_STEP = 1;
       const PINCH_THRESHOLD = 80;
       const TRACKPAD_WHEEL_THRESHOLD = 36;
@@ -408,10 +378,7 @@ const sortedShops = [...shops].sort((left, right) =>
 
         isQueuedZoomActive = true;
         syncMarkerScale(nextZoom);
-        map.setZoomAround(
-          queuedZoomPoint ?? map.getSize().divideBy(2),
-          nextZoom,
-        );
+        map.setZoomAround(queuedZoomPoint ?? map.getSize().divideBy(2), nextZoom);
       };
 
       map.on("zoomend", () => {
@@ -499,11 +466,7 @@ const sortedShops = [...shops].sort((left, right) =>
       };
 
       const handleMouseWheelZoom = (event) => {
-        if (
-          event.ctrlKey ||
-          isTrackpadWheelGesture(event) ||
-          event.deltaY === 0
-        ) {
+        if (event.ctrlKey || isTrackpadWheelGesture(event) || event.deltaY === 0) {
           return false;
         }
 
@@ -541,8 +504,7 @@ const sortedShops = [...shops].sort((left, right) =>
       let activeShopId = null;
       const isCompact = () => window.matchMedia("(max-width: 900px)").matches;
       const isPhone = () => window.matchMedia("(max-width: 640px)").matches;
-      const isSidebarHidden = () =>
-        root.classList.contains("is-sidebar-hidden");
+      const isSidebarHidden = () => root.classList.contains("is-sidebar-hidden");
       const getMarkerScaleForZoom = (zoom) => {
         const zoomDelta = Math.max(0, markerBaselineZoom - zoom);
 
@@ -562,10 +524,7 @@ const sortedShops = [...shops].sort((left, right) =>
         const markerScale = getMarkerScaleForZoom(zoom);
 
         for (const markerElement of markerElements.values()) {
-          markerElement.style.setProperty(
-            "--marker-zoom-scale",
-            markerScale.toFixed(3),
-          );
+          markerElement.style.setProperty("--marker-zoom-scale", markerScale.toFixed(3));
         }
       };
       const syncMarkerBaselineZoom = () => {
@@ -573,8 +532,7 @@ const sortedShops = [...shops].sort((left, right) =>
         syncMarkerScale();
       };
       const getMobileSheetMaxHeight = () => {
-        const frameHeight =
-          root.getBoundingClientRect().height || window.innerHeight;
+        const frameHeight = root.getBoundingClientRect().height || window.innerHeight;
 
         return Math.max(
           MOBILE_SHEET_MIN_HEIGHT,
@@ -587,36 +545,19 @@ const sortedShops = [...shops].sort((left, right) =>
           Math.max(240, Math.round(getMobileSheetMaxHeight() * 0.5)),
         );
       const clampMobileSheetHeight = (height) =>
-        Math.min(
-          getMobileSheetMaxHeight(),
-          Math.max(MOBILE_SHEET_MIN_HEIGHT, height),
-        );
+        Math.min(getMobileSheetMaxHeight(), Math.max(MOBILE_SHEET_MIN_HEIGHT, height));
       const syncMobileSheetHeight = () => {
-        currentMobileSheetHeight = clampMobileSheetHeight(
-          currentMobileSheetHeight,
-        );
-        root.style.setProperty(
-          "--mobile-sheet-visible-height",
-          `${currentMobileSheetHeight}px`,
-        );
-        root.style.setProperty(
-          "--mobile-sheet-max-height",
-          `${getMobileSheetMaxHeight()}px`,
-        );
+        currentMobileSheetHeight = clampMobileSheetHeight(currentMobileSheetHeight);
+        root.style.setProperty("--mobile-sheet-visible-height", `${currentMobileSheetHeight}px`);
+        root.style.setProperty("--mobile-sheet-max-height", `${getMobileSheetMaxHeight()}px`);
       };
       const setMobileSheetHeight = (height) => {
         currentMobileSheetHeight = clampMobileSheetHeight(height);
         syncMobileSheetHeight();
       };
       const setMobileSheetGestureLock = (locked) => {
-        document.documentElement.classList.toggle(
-          "coffee-map-mobile-sheet-active",
-          locked,
-        );
-        document.body.classList.toggle(
-          "coffee-map-mobile-sheet-active",
-          locked,
-        );
+        document.documentElement.classList.toggle("coffee-map-mobile-sheet-active", locked);
+        document.body.classList.toggle("coffee-map-mobile-sheet-active", locked);
       };
       const snapMobileSheet = (target = "nearest") => {
         const snapPoints = [
@@ -641,8 +582,7 @@ const sortedShops = [...shops].sort((left, right) =>
         }
 
         const nextHeight = snapPoints.reduce((closest, point) =>
-          Math.abs(point - currentMobileSheetHeight) <
-          Math.abs(closest - currentMobileSheetHeight)
+          Math.abs(point - currentMobileSheetHeight) < Math.abs(closest - currentMobileSheetHeight)
             ? point
             : closest,
         );
@@ -650,10 +590,7 @@ const sortedShops = [...shops].sort((left, right) =>
         setMobileSheetHeight(nextHeight);
       };
       const getSidebarMaxWidth = () =>
-        Math.max(
-          MIN_SIDEBAR_WIDTH,
-          Math.min(MAX_SIDEBAR_WIDTH, window.innerWidth - 48),
-        );
+        Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, window.innerWidth - 48));
       const clampSidebarWidth = (width) =>
         Math.min(getSidebarMaxWidth(), Math.max(MIN_SIDEBAR_WIDTH, width));
       const syncSidebarWidth = () => {
@@ -662,10 +599,7 @@ const sortedShops = [...shops].sort((left, right) =>
         currentSidebarWidth = width;
         root.style.setProperty("--sidebar-width", `${width}px`);
         sidebarResizer.setAttribute("aria-valuemin", String(MIN_SIDEBAR_WIDTH));
-        sidebarResizer.setAttribute(
-          "aria-valuemax",
-          String(getSidebarMaxWidth()),
-        );
+        sidebarResizer.setAttribute("aria-valuemax", String(getSidebarMaxWidth()));
         sidebarResizer.setAttribute("aria-valuenow", String(Math.round(width)));
       };
       const syncSidebarVisibility = () => {
@@ -680,10 +614,7 @@ const sortedShops = [...shops].sort((left, right) =>
         }
 
         if (isSidebarHidden()) {
-          currentSidebarWidth = Math.max(
-            currentSidebarWidth,
-            DEFAULT_SIDEBAR_WIDTH,
-          );
+          currentSidebarWidth = Math.max(currentSidebarWidth, DEFAULT_SIDEBAR_WIDTH);
         }
 
         root.classList.remove("is-sidebar-hidden", "is-sidebar-collapsing");
@@ -770,26 +701,19 @@ const sortedShops = [...shops].sort((left, right) =>
       });
 
       const getVisibleAmenities = (shop) =>
-        Object.keys(amenityDefinitions).filter((key) =>
-          Boolean(shop.details?.[key]),
-        );
+        Object.keys(amenityDefinitions).filter((key) => Boolean(shop.details?.[key]));
       const matchesFilters = (shop) => {
-        const matchesAmenities = Array.from(activeAmenityFilters).every(
-          (amenity) => Boolean(shop.details?.[amenity]),
+        const matchesAmenities = Array.from(activeAmenityFilters).every((amenity) =>
+          Boolean(shop.details?.[amenity]),
         );
         const neighborhood = shop.neighborhood?.trim();
         const matchesNeighborhoods =
           activeNeighborhoodFilters.size === 0 ||
-          (Boolean(neighborhood) &&
-            activeNeighborhoodFilters.has(neighborhood));
+          (Boolean(neighborhood) && activeNeighborhoodFilters.has(neighborhood));
         const matchesRecommendedStudySpot =
           !recommendedStudySpotOnly || Boolean(shop.recommendedStudySpot);
 
-        return (
-          matchesAmenities &&
-          matchesNeighborhoods &&
-          matchesRecommendedStudySpot
-        );
+        return matchesAmenities && matchesNeighborhoods && matchesRecommendedStudySpot;
       };
       const syncFilterSummary = (count) => {
         if (!(filterSummary instanceof HTMLElement)) return;
@@ -800,16 +724,12 @@ const sortedShops = [...shops].sort((left, right) =>
           activeNeighborhoodFilters.size > 0;
         const noun = count === 1 ? "shop" : "shops";
 
-        filterSummary.textContent = filtersActive
-          ? `${count} ${noun} match`
-          : `${count} ${noun}`;
+        filterSummary.textContent = filtersActive ? `${count} ${noun} match` : `${count} ${noun}`;
       };
       const syncFilterButtons = () => {
         for (const button of amenityFilterButtons) {
           const amenity = button.dataset.amenityFilter;
-          const isActive = Boolean(
-            amenity && activeAmenityFilters.has(amenity),
-          );
+          const isActive = Boolean(amenity && activeAmenityFilters.has(amenity));
 
           button.classList.toggle("is-active", isActive);
           button.setAttribute("aria-pressed", String(isActive));
@@ -817,23 +737,15 @@ const sortedShops = [...shops].sort((left, right) =>
 
         for (const button of neighborhoodFilterButtons) {
           const neighborhood = button.dataset.neighborhoodFilter;
-          const isActive = Boolean(
-            neighborhood && activeNeighborhoodFilters.has(neighborhood),
-          );
+          const isActive = Boolean(neighborhood && activeNeighborhoodFilters.has(neighborhood));
 
           button.classList.toggle("is-active", isActive);
           button.setAttribute("aria-pressed", String(isActive));
         }
 
         if (studySpotFilterButton instanceof HTMLButtonElement) {
-          studySpotFilterButton.classList.toggle(
-            "is-active",
-            recommendedStudySpotOnly,
-          );
-          studySpotFilterButton.setAttribute(
-            "aria-pressed",
-            String(recommendedStudySpotOnly),
-          );
+          studySpotFilterButton.classList.toggle("is-active", recommendedStudySpotOnly);
+          studySpotFilterButton.setAttribute("aria-pressed", String(recommendedStudySpotOnly));
         }
       };
       const applyFilters = () => {
@@ -860,11 +772,7 @@ const sortedShops = [...shops].sort((left, right) =>
 
         visibleShopIds = nextVisibleShopIds;
 
-        if (
-          activeShopId &&
-          !visibleShopIds.has(activeShopId) &&
-          shopsById.has(activeShopId)
-        ) {
+        if (activeShopId && !visibleShopIds.has(activeShopId) && shopsById.has(activeShopId)) {
           clearActiveShop();
         }
 
@@ -886,9 +794,7 @@ const sortedShops = [...shops].sort((left, right) =>
         );
 
         if (isContiguous) {
-          return (
-            DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]]
-          );
+          return DAY_ORDER[indexes[0]] + "-" + DAY_ORDER[indexes[indexes.length - 1]];
         }
 
         return indexes.map((index) => DAY_ORDER[index]).join(", ");
@@ -897,10 +803,7 @@ const sortedShops = [...shops].sort((left, right) =>
       const formatHoursEntries = (hours) =>
         Array.isArray(hours)
           ? hours
-              .map(
-                (entry) =>
-                  formatDayRange(entry.days || []) + " " + (entry.label || ""),
-              )
+              .map((entry) => formatDayRange(entry.days || []) + " " + (entry.label || ""))
               .filter((entry) => entry.trim())
           : [];
 
@@ -979,10 +882,7 @@ const sortedShops = [...shops].sort((left, right) =>
           popupDetails.append(popupDescription);
         }
 
-        if (
-          Array.isArray(shop.details?.hours) &&
-          shop.details.hours.length > 0
-        ) {
+        if (Array.isArray(shop.details?.hours) && shop.details.hours.length > 0) {
           const popupHours = document.createElement("div");
           popupHours.className = "coffee-map-popup__schedule";
 
@@ -1029,9 +929,7 @@ const sortedShops = [...shops].sort((left, right) =>
         }
 
         if (shop.address) {
-          const popupAddress = document.createElement(
-            shop.addressUrl ? "a" : "span",
-          );
+          const popupAddress = document.createElement(shop.addressUrl ? "a" : "span");
           popupAddress.className = shop.addressUrl
             ? "coffee-map-popup__address coffee-map-popup__text-link"
             : "coffee-map-popup__address";
@@ -1050,12 +948,8 @@ const sortedShops = [...shops].sort((left, right) =>
           const popupLinksRow = document.createElement("div");
           popupLinksRow.className = "coffee-map-popup__links";
 
-          const leftLink = popupLinks.find(
-            (link) => link.textContent === "Website",
-          );
-          const rightLink = popupLinks.find(
-            (link) => link.textContent !== "Website",
-          );
+          const leftLink = popupLinks.find((link) => link.textContent === "Website");
+          const rightLink = popupLinks.find((link) => link.textContent !== "Website");
 
           if (leftLink) {
             popupLinksRow.append(leftLink);
@@ -1084,10 +978,7 @@ const sortedShops = [...shops].sort((left, right) =>
           const bottomPadding = currentMobileSheetHeight + 24;
           const projectedPoint = map.project(targetLatLng, zoom);
           const offsetPoint = L.point(0, (topPadding - bottomPadding) / 2);
-          const centeredLatLng = map.unproject(
-            projectedPoint.subtract(offsetPoint),
-            zoom,
-          );
+          const centeredLatLng = map.unproject(projectedPoint.subtract(offsetPoint), zoom);
 
           map.flyTo(centeredLatLng, zoom, {
             animate: true,
@@ -1102,10 +993,7 @@ const sortedShops = [...shops].sort((left, right) =>
           (padding.left - padding.right) / 2,
           (padding.top - padding.bottom) / 2,
         );
-        const centeredLatLng = map.unproject(
-          projectedPoint.subtract(offsetPoint),
-          zoom,
-        );
+        const centeredLatLng = map.unproject(projectedPoint.subtract(offsetPoint), zoom);
 
         map.flyTo(centeredLatLng, zoom, {
           animate: true,
@@ -1164,8 +1052,7 @@ const sortedShops = [...shops].sort((left, right) =>
         }
 
         for (const item of listItems) {
-          const isActive =
-            item instanceof HTMLElement && item.dataset.shopId === shop.id;
+          const isActive = item instanceof HTMLElement && item.dataset.shopId === shop.id;
           item.classList.toggle("is-active", isActive);
           if (isActive && !isCompact()) {
             item.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -1224,9 +1111,7 @@ const sortedShops = [...shops].sort((left, right) =>
 
           markersById.set(shop.id, marker);
 
-          const liveMarker = marker
-            .getElement()
-            ?.querySelector(".coffee-marker");
+          const liveMarker = marker.getElement()?.querySelector(".coffee-marker");
           if (liveMarker instanceof HTMLElement) {
             markerElements.set(shop.id, liveMarker);
           }
@@ -1331,10 +1216,7 @@ const sortedShops = [...shops].sort((left, right) =>
         if (activePointerId !== event.pointerId) return;
 
         dragCurrentWidth = dragStartWidth + (event.clientX - dragStartX);
-        root.classList.toggle(
-          "is-sidebar-collapsing",
-          dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD,
-        );
+        root.classList.toggle("is-sidebar-collapsing", dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD);
 
         if (dragCurrentWidth <= HIDE_SIDEBAR_THRESHOLD) {
           resizeSidebar(MIN_SIDEBAR_WIDTH);
@@ -1414,24 +1296,15 @@ const sortedShops = [...shops].sort((left, right) =>
       });
 
       mobileSheetHandle?.addEventListener("pointerup", stopResizingMobileSheet);
-      mobileSheetHandle?.addEventListener(
-        "pointercancel",
-        stopResizingMobileSheet,
-      );
+      mobileSheetHandle?.addEventListener("pointercancel", stopResizingMobileSheet);
       mobileSheetHandle?.addEventListener("click", () => {
-        if (
-          !isCompact() ||
-          activeMobileSheetPointerId !== null ||
-          mobileSheetWasDragged
-        ) {
+        if (!isCompact() || activeMobileSheetPointerId !== null || mobileSheetWasDragged) {
           mobileSheetWasDragged = false;
           return;
         }
 
         const nextTarget =
-          currentMobileSheetHeight <= MOBILE_SHEET_MIN_HEIGHT + 12
-            ? "mid"
-            : "collapsed";
+          currentMobileSheetHeight <= MOBILE_SHEET_MIN_HEIGHT + 12 ? "mid" : "collapsed";
         snapMobileSheet(nextTarget);
       });
 
@@ -1556,8 +1429,7 @@ const sortedShops = [...shops].sort((left, right) =>
   }
 
   .coffee-map-sidebar__sheet-handle:hover .coffee-map-sidebar__sheet-grip,
-  .coffee-map-sidebar__sheet-handle:focus-visible
-    .coffee-map-sidebar__sheet-grip {
+  .coffee-map-sidebar__sheet-handle:focus-visible .coffee-map-sidebar__sheet-grip {
     background: rgba(90, 90, 90, 0.7);
   }
 
@@ -2043,9 +1915,7 @@ const sortedShops = [...shops].sort((left, right) =>
     border: 0;
     background: transparent;
     cursor: pointer;
-    transform: scale(
-      calc(var(--marker-zoom-scale) * var(--marker-interaction-scale))
-    );
+    transform: scale(calc(var(--marker-zoom-scale) * var(--marker-interaction-scale)));
     transform-origin: center;
     transition: transform 250ms cubic-bezier(0, 0, 0.25, 1);
     will-change: transform;
@@ -2130,9 +2000,7 @@ const sortedShops = [...shops].sort((left, right) =>
     display: none;
   }
 
-  .coffee-map-section
-    .leaflet-popup.coffee-map-popup
-    .leaflet-popup-content-wrapper {
+  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-content-wrapper {
     border: 1px solid rgba(229, 229, 229, 0.96);
     border-radius: 1.2rem;
     background: rgba(255, 255, 255, 0.96);
@@ -2147,9 +2015,7 @@ const sortedShops = [...shops].sort((left, right) =>
     max-width: 23rem;
   }
 
-  .coffee-map-section
-    .leaflet-popup.coffee-map-popup
-    .leaflet-popup-tip-container {
+  .coffee-map-section .leaflet-popup.coffee-map-popup .leaflet-popup-tip-container {
     margin-top: -1px;
   }
 

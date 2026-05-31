@@ -3,6 +3,7 @@
 ## Math
 
 ### 1. Abstract Algebra
+
 - **Group Theory**
   - Introduction to Groups: Definitions, examples, and properties
   - Subgroups and Cosets
@@ -20,6 +21,7 @@
   - Applications in Coding Theory and Cryptography
 
 ### 2. Real Analysis
+
 - **Sequences**
   - Definition and Examples of Sequences
   - Convergence and Divergence
@@ -34,6 +36,7 @@
   - Discontinuities and Types
 
 ### 3. (To Add) Further Topics
+
 - **Ring Theory**
   - Rings, Ideals, and Factor Rings
   - Ring Homomorphisms
@@ -45,6 +48,7 @@
 ## Computer Science
 
 ### 1. Operating Systems
+
 - Introduction to Operating Systems
 - Processes and Threads
 - CPU Scheduling
@@ -55,6 +59,7 @@
 - Virtualization and Containers
 
 ### 2. Machine Learning
+
 - Introduction to Machine Learning
 - Types of Learning: Supervised, Unsupervised, Reinforcement
 - Regression and Classification
@@ -63,6 +68,7 @@
 - Applications and Case Studies
 
 ### 3. (To Add) Further Topics
+
 - **Algorithms**
   - Sorting and Searching
   - Divide and Conquer

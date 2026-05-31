@@ -38,9 +38,7 @@ const { webpSrc, pngSrc, alt, class: className = "" } = Astro.props;
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const containers = document.querySelectorAll(
-      ".progressive-image-container",
-    );
+    const containers = document.querySelectorAll(".progressive-image-container");
 
     containers.forEach((container) => {
       const webpImg = container.querySelector(".progressive-image-webp");
